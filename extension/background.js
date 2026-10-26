@@ -1,5 +1,5 @@
 /* Pagewright background: reads the page, asks the AI for a plan, applies it locally. */
-var DEFAULT_SERVER = "https://project--113b80e6-3c46-4339-b113-b0987ed33340.lovable.app";
+var DEFAULT_SERVER = "https://project--9e9f7a85-4d83-4522-9e31-420744d88dd9.lovable.app";
 
 function getServer() {
   return chrome.storage.local.get("serverUrl").then(function (r) {
