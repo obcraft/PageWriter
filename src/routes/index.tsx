@@ -322,8 +322,7 @@ function Index() {
       <main className="mx-auto max-w-6xl px-6">
         {/* Hero */}
         <section className="pb-16 pt-12 text-center lg:pt-20">
-          <p className="label-mono mb-6 text-gold">✦ a small spell for your browser ✦</p>
-          <h1 className="mx-auto max-w-4xl font-display text-6xl leading-[0.92] sm:text-7xl lg:text-[6.5rem]">
+          <h1 className="mx-auto max-w-4xl font-display text-5xl leading-[1.05] sm:text-6xl lg:text-7xl">
             Every website, <em className="text-shimmer">rewritten</em> to your liking.
           </h1>
           <p className="mx-auto mt-7 max-w-xl text-lg text-muted-foreground">
@@ -355,8 +354,7 @@ function Index() {
 
         {/* Spellbook */}
         <section className="py-20">
-          <p className="label-mono mb-4 text-center text-gold">the spellbook</p>
-          <h2 className="mx-auto max-w-2xl text-center font-display text-5xl leading-tight">
+          <h2 className="mx-auto max-w-2xl text-center font-display text-4xl leading-tight sm:text-5xl">
             Anything you can say, the page can become.
           </h2>
           <ul className="mx-auto mt-14 flex max-w-4xl flex-wrap justify-center gap-x-4 gap-y-7">
@@ -375,8 +373,7 @@ function Index() {
         {/* Community */}
         <section className="grid items-center gap-12 border-t border-border py-20 lg:grid-cols-[1fr_1.2fr]">
           <div>
-            <p className="label-mono mb-4 text-gold">the circle</p>
-            <h2 className="font-display text-5xl leading-tight">Borrow someone else's magic.</h2>
+            <h2 className="font-display text-4xl leading-tight sm:text-5xl">Borrow someone else's magic.</h2>
             <p className="mt-5 max-w-md text-muted-foreground">
               Made Reddit calm or LinkedIn bearable? Share your setup. Others find it by website and
               try it in one click — no prompt needed.
@@ -408,8 +405,7 @@ function Index() {
         <section className="border-t border-border py-20">
           <div className="grid gap-12 md:grid-cols-[1fr_1.4fr]">
             <div>
-              <p className="label-mono mb-4 text-gold">summoning</p>
-              <h2 className="font-display text-5xl leading-tight">Install in a minute.</h2>
+              <h2 className="font-display text-4xl leading-tight sm:text-5xl">Install in a minute.</h2>
               <Button variant="hero" size="lg" className="mt-8" onClick={download}>
                 <ArrowDownToLine /> Download
               </Button>
