@@ -14,6 +14,32 @@ export type Database = {
   }
   public: {
     Tables: {
+      config_likes: {
+        Row: {
+          config_id: string
+          created_at: string
+          user_id: string
+        }
+        Insert: {
+          config_id: string
+          created_at?: string
+          user_id: string
+        }
+        Update: {
+          config_id?: string
+          created_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "config_likes_config_id_fkey"
+            columns: ["config_id"]
+            isOneToOne: false
+            referencedRelation: "shared_configs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           created_at: string
@@ -41,6 +67,7 @@ export type Database = {
           id: string
           installs: number
           instruction: string
+          likes: number
           operations: Json
           title: string
           user_id: string | null
@@ -53,6 +80,7 @@ export type Database = {
           id?: string
           installs?: number
           instruction: string
+          likes?: number
           operations: Json
           title: string
           user_id?: string | null
@@ -65,6 +93,7 @@ export type Database = {
           id?: string
           installs?: number
           instruction?: string
+          likes?: number
           operations?: Json
           title?: string
           user_id?: string | null
