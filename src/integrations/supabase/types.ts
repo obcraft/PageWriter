@@ -14,13 +14,48 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      shared_configs: {
+        Row: {
+          author_name: string
+          created_at: string
+          description: string
+          host: string
+          id: string
+          installs: number
+          instruction: string
+          operations: Json
+          title: string
+        }
+        Insert: {
+          author_name?: string
+          created_at?: string
+          description?: string
+          host: string
+          id?: string
+          installs?: number
+          instruction: string
+          operations: Json
+          title: string
+        }
+        Update: {
+          author_name?: string
+          created_at?: string
+          description?: string
+          host?: string
+          id?: string
+          installs?: number
+          instruction?: string
+          operations?: Json
+          title?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      increment_installs: { Args: { config_id: string }; Returns: undefined }
     }
     Enums: {
       [_ in never]: never
