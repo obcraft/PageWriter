@@ -35,6 +35,8 @@ const OP_TYPES = [
   "attribute",
   "click",
   "css",
+  "move",
+  "insert",
 ] as const;
 
 // Strict-compatible schema: every field required, optional values nullable.
@@ -69,12 +71,15 @@ Operations (unused fields must be null):
 - text: selector, value = new text content.
 - attribute: selector, property = attribute name, value.
 - click: selector = the single element to click (e.g. a native "Sort by: Recent" control). Use only if the page offers a real control for what the user wants AND the change cannot be achieved reliably by DOM edits; prefer sort.
-- css: value = a full CSS stylesheet to inject (use for broad visual changes like dark mode, wider layout, bigger fonts).
+- css: value = a full CSS stylesheet to inject (use for broad visual changes like dark mode, wider layout, bigger fonts, fixed/sticky positioning, hiding via selectors, reflowing layouts with flex/grid "order"). For dark mode write a thorough stylesheet: dark background and light text on html, body and main containers, readable links, inputs/buttons restyled, and e.g. "img, video, picture, svg image { filter: none }"; prefer overriding background-color/color with !important on common containers over a single invert filter, unless the site is very complex — then "html { filter: invert(1) hue-rotate(180deg); background:#fff } img, video, picture, canvas, [style*=background-image] { filter: invert(1) hue-rotate(180deg) }" is an acceptable fallback.
+- move: relocate existing element(s). selector = element(s) to move, value = CSS selector of the target anchor element, property = "before" | "after" | "prepend" | "append" (relative to the target). E.g. "move the search bar to the bottom" → selector = the search form/container, value = "body" (or the main footer), property = "append". If moving inside the DOM would break the site's layout, a css op with position:fixed/bottom:0 is a valid alternative.
+- insert: add new content. selector = anchor element, value = HTML snippet (static markup with inline styles only; scripts and event handlers are stripped), property = "before" | "after" | "prepend" | "append".
 
 Rules:
 - Prefer stable selectors: ids, data-* attributes, semantic tags, aria attributes, and meaningful class names. Avoid long auto-generated hashed classes when a stabler hook exists.
 - Selectors must match elements that appear in the outline.
-- Keep the plan minimal: usually 1–3 operations.
+- The user may ask for ANY visual or structural change: restyle, recolor, dark mode, resize, relocate, reorder, hide, rename, add notes or banners, simplify, declutter, change fonts, etc. Always try to fulfil it by combining operations; only return an empty list if it is truly impossible (e.g. needs server data the page does not have).
+- Keep the plan focused: usually 1–5 operations.
 - summary: one short sentence in the user's language describing what you changed (or why you could not). If the request cannot be done on this page, return an empty operations array and explain in summary.`;
 
 function json(body: unknown, status = 200) {

@@ -63,7 +63,7 @@ async function run(tabId, instruction) {
   }
 }
 
-async function saveRule(tabId) {
+async function saveRule(tabId, everywhere) {
   var key = "last:" + tabId;
   var last = (await chrome.storage.session.get(key))[key];
   if (!last || !last.operations || !last.operations.length) return false;
@@ -71,8 +71,8 @@ async function saveRule(tabId) {
   var rules = (await chrome.storage.local.get("rules")).rules || [];
   rules.push({
     id: Math.random().toString(36).slice(2, 10),
-    host: last.host,
-    path: firstSegment,
+    host: everywhere ? "*" : last.host,
+    path: everywhere ? "/" : firstSegment,
     instruction: last.instruction,
     summary: last.summary,
     operations: last.operations,
@@ -80,7 +80,7 @@ async function saveRule(tabId) {
     createdAt: Date.now(),
   });
   await chrome.storage.local.set({ rules: rules });
-  await setState(tabId, { saved: true });
+  await setState(tabId, { saved: everywhere ? "all" : "site" });
   return true;
 }
 
@@ -89,7 +89,7 @@ chrome.runtime.onMessage.addListener(function (msg, _sender, sendResponse) {
     run(msg.tabId, msg.instruction);
     sendResponse({ started: true });
   } else if (msg && msg.type === "save") {
-    saveRule(msg.tabId).then(function (ok) { sendResponse({ ok: ok }); });
+    saveRule(msg.tabId, !!msg.everywhere).then(function (ok) { sendResponse({ ok: ok }); });
     return true;
   }
   return false;

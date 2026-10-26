@@ -236,6 +236,63 @@
     return 1;
   }
 
+  // Place `el` relative to `target`. position: before | after | prepend | append (default).
+  function place(el, target, position) {
+    switch (position) {
+      case "before": if (target.previousSibling !== el) target.parentNode.insertBefore(el, target); break;
+      case "after": if (target.nextSibling !== el) target.parentNode.insertBefore(el, target.nextSibling); break;
+      case "prepend": if (target.firstChild !== el) target.insertBefore(el, target.firstChild); break;
+      default: if (target.lastChild !== el) target.appendChild(el);
+    }
+  }
+
+  // move: selector = element(s) to move, value = target selector, property = position.
+  function opMove(op) {
+    var target = document.querySelector(op.value);
+    if (!target) throw new Error("Target not found");
+    var moved = 0;
+    each(op.selector, function (el) {
+      if (el === target || el.contains(target)) return;
+      place(el, target, op.property);
+      moved++;
+    });
+    return moved;
+  }
+
+  // Strip anything executable from AI-provided markup.
+  function sanitize(node) {
+    node.querySelectorAll("script,iframe,object,embed,link,meta,base").forEach(function (n) { n.remove(); });
+    node.querySelectorAll("*").forEach(function (n) {
+      Array.prototype.slice.call(n.attributes).forEach(function (a) {
+        var name = a.name.toLowerCase();
+        if (name.indexOf("on") === 0 || /^\s*javascript:/i.test(a.value)) n.removeAttribute(a.name);
+      });
+    });
+  }
+
+  // insert: selector = anchor, value = HTML, property = position. Idempotent per rule.
+  function opInsert(op, ruleId) {
+    var mark = "pw-" + (ruleId || "live") + "-" + hash(op.selector + "|" + op.property + "|" + op.value);
+    if (document.querySelector('[data-pagewright="' + mark + '"]')) return 0;
+    var target = document.querySelector(op.selector);
+    if (!target) throw new Error("Target not found");
+    var tpl = document.createElement("template");
+    tpl.innerHTML = op.value || "";
+    sanitize(tpl.content);
+    var wrap = document.createElement("div");
+    wrap.setAttribute("data-pagewright", mark);
+    wrap.style.display = "contents";
+    wrap.appendChild(tpl.content);
+    place(wrap, target, op.property);
+    return 1;
+  }
+
+  function hash(s) {
+    var h = 0;
+    for (var i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) | 0;
+    return (h >>> 0).toString(36);
+  }
+
   function applyOne(op, ctx) {
     switch (op.type) {
       case "sort": return opSort(op);
@@ -254,6 +311,8 @@
         return 1;
       }
       case "css": return opCss(op, ctx && ctx.ruleId);
+      case "move": return opMove(op);
+      case "insert": return opInsert(op, ctx && ctx.ruleId);
       default: throw new Error("Unknown operation: " + op.type);
     }
   }
