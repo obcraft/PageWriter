@@ -57,7 +57,7 @@ function renderSaved(rules) {
   if (!tab) return;
   var host;
   try { host = new URL(tab.url).hostname; } catch (e) { return; }
-  var mine = (rules || []).filter(function (r) { return r.host === host || r.host === "*"; });
+  var mine = (rules || []).filter(function (r) { return r.host === "*" || r.host.replace(/^www\./, "") === host.replace(/^www\./, ""); });
   $("savedWrap").hidden = mine.length === 0;
   var ul = $("saved");
   ul.innerHTML = "";
