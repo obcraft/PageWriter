@@ -71,7 +71,6 @@ function renderSaved(rules) {
     share.addEventListener("click", function () {
       chrome.tabs.create({ url: chrome.runtime.getURL("hub.html?share=" + rule.id) });
     });
-    li.appendChild(share);
     var del = document.createElement("button");
     del.textContent = "Remove";
     del.addEventListener("click", function () {
@@ -79,6 +78,7 @@ function renderSaved(rules) {
       chrome.storage.local.set({ rules: next });
     });
     li.appendChild(span);
+    li.appendChild(share);
     li.appendChild(del);
     ul.appendChild(li);
   });
