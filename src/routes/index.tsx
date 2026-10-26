@@ -102,6 +102,8 @@ const SPELLS = [
   { say: "move the search bar to the bottom", step: "Moved search to the bottom" },
   { say: "hide the promoted stuff", step: "Hid 1 promoted post" },
   { say: "newest posts first", step: "Sorted 4 posts by time" },
+  { say: "make the text bigger", step: "Enlarged the post text" },
+  { say: "add a note: stay focused", step: "Pinned your note at the top" },
 ] as const;
 
 const POSTS = [
@@ -161,12 +163,14 @@ function SpellDemo() {
   const searchBottom = spell >= 1;
   const hideAd = spell >= 2;
   const sorted = spell >= 3;
+  const bigger = spell >= 4;
+  const note = spell >= 5;
 
   const layout = useMemo(() => {
     let posts = POSTS.filter((p) => !(hideAd && p.key === "ad"));
     if (sorted) posts = [...posts].sort((a, b) => a.age - b.age);
     const ys: Record<string, number> = {};
-    let y = searchBottom ? 0 : SEARCH_H + GAP;
+    let y = (searchBottom ? 0 : SEARCH_H + GAP) + (note ? NOTE_H + GAP : 0);
     posts.forEach((p) => {
       ys[p.key] = y;
       y += POST_H + GAP;
@@ -174,7 +178,7 @@ function SpellDemo() {
     const searchY = searchBottom ? y : 0;
     const height = y + (searchBottom ? SEARCH_H : -GAP);
     return { ys, searchY, height };
-  }, [searchBottom, hideAd, sorted]);
+  }, [searchBottom, hideAd, sorted, note]);
 
   const page = dark ? "bg-card text-foreground" : "bg-page text-page-foreground";
   const tile = dark ? "bg-secondary border-border" : "bg-background/[0.03] border-page-muted";
