@@ -328,5 +328,28 @@
     });
   }
 
-  globalThis.Pagewright = { snapshot: snapshot, apply: apply, parseDate: parseDate };
+  // Briefly outline elements touched by an operation so changes are visible as they happen.
+  function flash(op) {
+    var els = [];
+    try {
+      if (op.type === "insert") els = document.querySelectorAll('[data-pagewright^="pw-live-"]');
+      else if (op.selector && op.type !== "remove" && op.type !== "hide") els = document.querySelectorAll(op.selector);
+      else if (op.type === "css") els = [document.body];
+    } catch (e) { return; }
+    Array.prototype.slice.call(els, 0, 30).forEach(function (el) {
+      if (!el || !el.style) return;
+      var prev = el.style.outline, prevOff = el.style.outlineOffset;
+      el.style.outline = "3px solid #ff5a1f";
+      el.style.outlineOffset = "2px";
+      setTimeout(function () { el.style.outline = prev; el.style.outlineOffset = prevOff; }, 900);
+    });
+  }
+
+  function applyStep(op) {
+    var r = apply([op])[0];
+    if (r.ok) flash(op);
+    return r;
+  }
+
+  globalThis.Pagewright = { snapshot: snapshot, apply: apply, applyStep: applyStep, parseDate: parseDate };
 })();

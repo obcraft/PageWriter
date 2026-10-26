@@ -18,8 +18,9 @@ function render(state) {
   if (state && state.status === "error") $("error").textContent = state.error;
 
   var done = state && state.status === "done";
-  $("result").hidden = !done;
-  if (done) {
+  var live = state && (state.status === "applying" || done) && state.operations;
+  $("result").hidden = !live;
+  if (live) {
     $("summary").textContent = state.summary || "Done.";
     var ops = $("ops");
     ops.innerHTML = "";
@@ -27,7 +28,7 @@ function render(state) {
       var li = document.createElement("li");
       li.className = r.ok && r.affected > 0 ? "ok" : "bad";
       li.textContent = r.ok
-        ? r.type + " — " + r.affected + " element" + (r.affected === 1 ? "" : "s")
+        ? (r.label ? "✓ " + r.label + " (" + r.affected + ")" : r.type) + " — " + r.affected + " element" + (r.affected === 1 ? "" : "s")
         : r.type + " — " + r.error;
       ops.appendChild(li);
     });

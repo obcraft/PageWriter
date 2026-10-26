@@ -52,9 +52,18 @@ async function run(tabId, instruction) {
     var data = await res.json().catch(function () { return {}; });
     if (!res.ok) throw new Error(data.error || "Server error (" + res.status + ")");
 
-    await setState(tabId, { status: "applying", summary: data.summary, operations: data.operations });
-    var results = await inTab(tabId, function (ops) { return globalThis.Pagewright.apply(ops); }, [data.operations || []]);
-    await setState(tabId, { status: "done", results: results || [] });
+    var ops = data.operations || [];
+    await setState(tabId, { status: "applying", summary: data.summary, operations: ops, results: [], saved: false, ruleId: null });
+    var results = [];
+    for (var i = 0; i < ops.length; i++) {
+      var r = await inTab(tabId, function (op) { return globalThis.Pagewright.applyStep(op); }, [ops[i]]);
+      results.push(Object.assign({ label: ops[i].label }, r || { ok: false, affected: 0 }));
+      await setState(tabId, { results: results.slice() });
+      if (i < ops.length - 1) await new Promise(function (ok) { setTimeout(ok, 450); });
+    }
+    await setState(tabId, { status: "done", results: results });
+    // Persist automatically for this site; the panel can widen it to all sites or undo it.
+    if (ops.length && results.some(function (x) { return x.ok; })) await saveRule(tabId, false);
   } catch (e) {
     var msg = String((e && e.message) || e);
     if (/Failed to fetch|NetworkError/i.test(msg)) msg = "Couldn't reach the Pagewright server. Check the server address in settings.";
@@ -69,8 +78,17 @@ async function saveRule(tabId, everywhere) {
   if (!last || !last.operations || !last.operations.length) return false;
   var firstSegment = "/" + ((last.path || "/").split("/")[1] || "");
   var rules = (await chrome.storage.local.get("rules")).rules || [];
+  if (last.ruleId) {
+    var existing = rules.find(function (r) { return r.id === last.ruleId; });
+    if (existing && everywhere) { existing.host = "*"; existing.path = "/"; }
+    await chrome.storage.local.set({ rules: rules });
+    await setState(tabId, { saved: everywhere ? "all" : "site" });
+    return true;
+  }
+  var id = Math.random().toString(36).slice(2, 10);
+  await setState(tabId, { ruleId: id });
   rules.push({
-    id: Math.random().toString(36).slice(2, 10),
+    id: id,
     host: everywhere ? "*" : last.host,
     path: everywhere ? "/" : firstSegment,
     instruction: last.instruction,
@@ -91,6 +109,9 @@ chrome.runtime.onMessage.addListener(function (msg, _sender, sendResponse) {
   } else if (msg && msg.type === "save") {
     saveRule(msg.tabId, !!msg.everywhere).then(function (ok) { sendResponse({ ok: ok }); });
     return true;
+  } else if (msg && msg.type === "undo") {
+    undo(msg.tabId).then(function () { sendResponse({ ok: true }); });
+    return true;
   }
   return false;
 });
@@ -101,3 +122,14 @@ chrome.tabs.onRemoved.addListener(function (tabId) {
 
 // Open as a docked side panel (like MetaMask) that pushes the page aside.
 chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true }).catch(function () {});
+
+async function undo(tabId) {
+  var key = "last:" + tabId;
+  var last = (await chrome.storage.session.get(key))[key];
+  if (last && last.ruleId) {
+    var rules = (await chrome.storage.local.get("rules")).rules || [];
+    await chrome.storage.local.set({ rules: rules.filter(function (r) { return r.id !== last.ruleId; }) });
+  }
+  await chrome.storage.session.remove(key);
+  await chrome.tabs.reload(tabId);
+}
