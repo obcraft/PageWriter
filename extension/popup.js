@@ -18,25 +18,32 @@ function render(state) {
   if (state && state.status === "error") $("error").textContent = state.error;
 
   var done = state && state.status === "done";
-  $("result").hidden = !done;
-  if (done) {
+  var live = state && (state.status === "applying" || done) && state.operations;
+  $("result").hidden = !live;
+  if (live) {
     $("summary").textContent = state.summary || "Done.";
     var ops = $("ops");
     ops.innerHTML = "";
     (state.results || []).forEach(function (r) {
       var li = document.createElement("li");
       li.className = r.ok && r.affected > 0 ? "ok" : "bad";
-      li.textContent = r.ok
-        ? r.type + " — " + r.affected + " element" + (r.affected === 1 ? "" : "s")
-        : r.type + " — " + r.error;
+      var name = r.label || r.type;
+      li.textContent = r.ok && r.affected > 0
+        ? "✓ " + name
+        : "✗ " + name + (r.ok ? " (nothing matched)" : " (couldn't apply)");
       ops.appendChild(li);
     });
-    var canKeep = (state.operations || []).length > 0;
+    if (state.status === "applying") {
+      var li2 = document.createElement("li");
+      li2.textContent = "… " + ((state.operations[(state.results || []).length] || {}).label || "Working");
+      ops.appendChild(li2);
+    }
+    var canKeep = done && (state.operations || []).length > 0;
     $("keep").hidden = !canKeep;
     $("keepAll").hidden = !canKeep;
     $("keep").disabled = !!state.saved;
-    $("keepAll").disabled = !!state.saved;
-    $("keep").textContent = state.saved === "site" || state.saved === true ? "Kept ✓" : "Keep on this site";
+    $("keepAll").disabled = state.saved === "all";
+    $("keep").textContent = state.saved ? "Saved for this site ✓" : "Keep on this site";
     $("keepAll").textContent = state.saved === "all" ? "Kept everywhere ✓" : "Keep on all sites";
   }
 }
@@ -111,9 +118,7 @@ async function init() {
     chrome.runtime.sendMessage({ type: "save", tabId: tab.id, everywhere: true });
   });
   $("undo").addEventListener("click", function () {
-    chrome.storage.session.remove(key);
-    chrome.tabs.reload(tab.id);
-
+    chrome.runtime.sendMessage({ type: "undo", tabId: tab.id });
   });
   $("settingsBtn").addEventListener("click", function () {
     $("settings").hidden = !$("settings").hidden;

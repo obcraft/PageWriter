@@ -41,6 +41,7 @@ const OP_TYPES = [
 
 // Strict-compatible schema: every field required, optional values nullable.
 const OperationSchema = z.object({
+  label: z.string(),
   type: z.enum(OP_TYPES),
   selector: z.string().nullable(),
   itemSelector: z.string().nullable(),
@@ -62,6 +63,8 @@ export type ReshapePlan = z.infer<typeof PlanSchema>;
 const INSTRUCTIONS = `You are Pagewright, a browser extension brain. The user is looking at a web page and asks you to change it LOCALLY (only in their browser). You receive a compact outline of the page's DOM and must return a list of DOM operations that a script will execute.
 
 DOM outline format: one element per line, indented by depth: tag#id.class1.class2 [attr="value"] "direct text". Plain wrapper elements may be omitted, so NEVER use the ">" child combinator or :nth-child based on outline positions. Lines like "… 14 more <li.item> siblings" mean there are more elements of the same shape.
+
+Every operation has a label: a very short plain-language description of the step for a non-technical user, in the user's language (e.g. "Darkened the background", "Moved search bar to the bottom").
 
 Operations (unused fields must be null):
 - sort: reorder repeated items. selector = CSS selector of the container holding the items (a common ancestor). itemSelector = selector matching every item inside the container. keySelector = selector INSIDE each item for the element holding the sort value (null = the item itself). keyAttribute = attribute to read (e.g. "datetime", "data-time", "aria-label") or null to read visible text. keyType = "date" | "number" | "text". order = "asc" | "desc". Dates can be absolute or relative ("3h", "2d", "1w", "2 mo", "5 days ago", Dutch "3 u", "2 d", "1 w", "2 mnd", "1 j", "gisteren") — the executor parses them. For "chronological"/"newest first"/"recent" feeds use keyType "date" and order "desc" (newest first) unless the user explicitly asks for oldest first, then "asc".
