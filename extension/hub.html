@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Pagewright — Community setups</title>
+    <link rel="stylesheet" href="popup.css" />
+    <link rel="stylesheet" href="hub.css" />
+  </head>
+  <body class="hub">
+    <header class="top hubtop">
+      <div class="brand">
+        <img src="icons/icon48.png" alt="" width="28" height="28" />
+        <span class="name">Pagewright <em>Community</em></span>
+      </div>
+      <nav class="tabs">
+        <button data-tab="browse" class="tab active">Browse</button>
+        <button data-tab="mine" class="tab">My setups</button>
+      </nav>
+    </header>
+
+    <main class="hubmain">
+      <section id="browse">
+        <div class="filters">
+          <input id="siteFilter" placeholder="Website, e.g. reddit.com" spellcheck="false" />
+          <input id="search" placeholder="Search setups…" />
+          <div class="quick">
+            <button class="chip" data-site="">All</button>
+            <button class="chip" data-site="reddit.com">Reddit</button>
+            <button class="chip" data-site="linkedin.com">LinkedIn</button>
+            <button class="chip" data-site="youtube.com">YouTube</button>
+            <button class="chip" data-site="x.com">X</button>
+          </div>
+        </div>
+        <p id="browseMsg" class="hint"></p>
+        <div id="grid" class="grid"></div>
+      </section>
+
+      <section id="mine" hidden>
+        <p class="hint">Setups you kept. Share one so others can try it on the same website.</p>
+        <div id="mineGrid" class="grid"></div>
+      </section>
+    </main>
+
+    <dialog id="shareDlg" class="dlg">
+      <form id="shareForm" method="dialog">
+        <h2>Share this setup</h2>
+        <p id="shareWhat" class="hint"></p>
+        <label class="label" for="shTitle">Title</label>
+        <input id="shTitle" required minlength="2" maxlength="80" placeholder="e.g. Clean Reddit, dark & no ads" />
+        <label class="label" for="shDesc">What does it do? (optional)</label>
+        <textarea id="shDesc" rows="3" maxlength="500"></textarea>
+        <label class="label" for="shName">Your name (optional)</label>
+        <input id="shName" maxlength="40" placeholder="Anonymous" />
+        <p id="shareErr" class="error" hidden></p>
+        <div class="row">
+          <button type="submit" id="shareSubmit" class="btn primary">Share publicly</button>
+          <button type="button" id="shareCancel" class="btn ghost">Cancel</button>
+        </div>
+      </form>
+    </dialog>
+
+    <script src="hub.js"></script>
+  </body>
+</html>

@@ -14,3 +14,4 @@
 - The extension never runs AI-generated code; the AI returns a small JSON list of DOM operations that `extension/pagewright.js` executes — keeps it CSP-safe on sites like LinkedIn.
 - The AI planning endpoint is `src/routes/api/public/reshape.ts` (public, CORS-open, input size-capped) so the extension can call it from any site; logic lives in `src/server/reshape.server.ts`.
 - `extension/pagewright.js` is a plain script exposing `globalThis.Pagewright`; its sort/date/filter logic is tested in `src/test/pagewright-ops.test.ts`.
+- Community sharing: shared setups live in `public.shared_configs` (public read, writes only via `src/routes/api/public/configs*` using the admin client, size/shape validated in `src/server/configs.server.ts`); the extension's full-screen `extension/hub.html` browses/tries/shares them — no accounts, so the server is the only writer.

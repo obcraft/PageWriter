@@ -10,11 +10,18 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ApiPublicConfigsRouteImport } from './routes/api/public/configs'
 import { Route as ApiPublicReshapeRouteImport } from './routes/api/public/reshape'
+import { Route as ApiPublicConfigsIdInstallRouteImport } from './routes/api/public/configs.$id.install'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicConfigsRoute = ApiPublicConfigsRouteImport.update({
+  id: '/api/public/configs',
+  path: '/api/public/configs',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiPublicReshapeRoute = ApiPublicReshapeRouteImport.update({
@@ -22,30 +29,56 @@ const ApiPublicReshapeRoute = ApiPublicReshapeRouteImport.update({
   path: '/api/public/reshape',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicConfigsIdInstallRoute =
+  ApiPublicConfigsIdInstallRouteImport.update({
+    id: '/$id/install',
+    path: '/$id/install',
+    getParentRoute: () => ApiPublicConfigsRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/api/public/configs': typeof ApiPublicConfigsRouteWithChildren
   '/api/public/reshape': typeof ApiPublicReshapeRoute
+  '/api/public/configs/$id/install': typeof ApiPublicConfigsIdInstallRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/api/public/configs': typeof ApiPublicConfigsRouteWithChildren
   '/api/public/reshape': typeof ApiPublicReshapeRoute
+  '/api/public/configs/$id/install': typeof ApiPublicConfigsIdInstallRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/api/public/configs': typeof ApiPublicConfigsRouteWithChildren
   '/api/public/reshape': typeof ApiPublicReshapeRoute
+  '/api/public/configs/$id/install': typeof ApiPublicConfigsIdInstallRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/api/public/reshape'
+  fullPaths:
+    | '/'
+    | '/api/public/configs'
+    | '/api/public/reshape'
+    | '/api/public/configs/$id/install'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/api/public/reshape'
-  id: '__root__' | '/' | '/api/public/reshape'
+  to:
+    | '/'
+    | '/api/public/configs'
+    | '/api/public/reshape'
+    | '/api/public/configs/$id/install'
+  id:
+    | '__root__'
+    | '/'
+    | '/api/public/configs'
+    | '/api/public/reshape'
+    | '/api/public/configs/$id/install'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ApiPublicConfigsRoute: typeof ApiPublicConfigsRouteWithChildren
   ApiPublicReshapeRoute: typeof ApiPublicReshapeRoute
 }
 
@@ -58,6 +91,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/configs': {
+      id: '/api/public/configs'
+      path: '/api/public/configs'
+      fullPath: '/api/public/configs'
+      preLoaderRoute: typeof ApiPublicConfigsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/reshape': {
       id: '/api/public/reshape'
       path: '/api/public/reshape'
@@ -65,11 +105,30 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicReshapeRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/configs/$id/install': {
+      id: '/api/public/configs/$id/install'
+      path: '/$id/install'
+      fullPath: '/api/public/configs/$id/install'
+      preLoaderRoute: typeof ApiPublicConfigsIdInstallRouteImport
+      parentRoute: typeof ApiPublicConfigsRoute
+    }
   }
 }
 
+interface ApiPublicConfigsRouteChildren {
+  ApiPublicConfigsIdInstallRoute: typeof ApiPublicConfigsIdInstallRoute
+}
+
+const ApiPublicConfigsRouteChildren: ApiPublicConfigsRouteChildren = {
+  ApiPublicConfigsIdInstallRoute: ApiPublicConfigsIdInstallRoute,
+}
+
+const ApiPublicConfigsRouteWithChildren =
+  ApiPublicConfigsRoute._addFileChildren(ApiPublicConfigsRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ApiPublicConfigsRoute: ApiPublicConfigsRouteWithChildren,
   ApiPublicReshapeRoute: ApiPublicReshapeRoute,
 }
 export const routeTree = rootRouteImport

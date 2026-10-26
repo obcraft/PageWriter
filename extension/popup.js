@@ -1,4 +1,4 @@
-var DEFAULT_SERVER = "https://project--113b80e6-3c46-4339-b113-b0987ed33340.lovable.app";
+var DEFAULT_SERVER = "https://project--9e9f7a85-4d83-4522-9e31-420744d88dd9.lovable.app";
 var $ = function (id) { return document.getElementById(id); };
 var tab = null;
 
@@ -57,7 +57,7 @@ function renderSaved(rules) {
   if (!tab) return;
   var host;
   try { host = new URL(tab.url).hostname; } catch (e) { return; }
-  var mine = (rules || []).filter(function (r) { return r.host === host || r.host === "*"; });
+  var mine = (rules || []).filter(function (r) { return r.host === "*" || r.host.replace(/^www\./, "") === host.replace(/^www\./, ""); });
   $("savedWrap").hidden = mine.length === 0;
   var ul = $("saved");
   ul.innerHTML = "";
@@ -66,6 +66,11 @@ function renderSaved(rules) {
     var span = document.createElement("span");
     span.textContent = (rule.host === "*" ? "[all sites] " : "") + rule.instruction;
     span.title = rule.summary || "";
+    var share = document.createElement("button");
+    share.textContent = "Share";
+    share.addEventListener("click", function () {
+      chrome.tabs.create({ url: chrome.runtime.getURL("hub.html?share=" + rule.id) });
+    });
     var del = document.createElement("button");
     del.textContent = "Remove";
     del.addEventListener("click", function () {
@@ -73,6 +78,7 @@ function renderSaved(rules) {
       chrome.storage.local.set({ rules: next });
     });
     li.appendChild(span);
+    li.appendChild(share);
     li.appendChild(del);
     ul.appendChild(li);
   });
@@ -107,6 +113,10 @@ async function init() {
   });
 
   $("run").addEventListener("click", run);
+  $("hubBtn").addEventListener("click", function () {
+    var h = ""; try { h = new URL(tab.url).hostname; } catch (e) {}
+    chrome.tabs.create({ url: chrome.runtime.getURL("hub.html?host=" + encodeURIComponent(h)) });
+  });
   $("pick").addEventListener("click", function () { chrome.runtime.sendMessage({ type: "pick", tabId: tab.id }); });
   $("clearTarget").addEventListener("click", function () { chrome.runtime.sendMessage({ type: "clearTarget", tabId: tab.id }); });
   $("instruction").addEventListener("keydown", function (e) {

@@ -10,10 +10,10 @@
   var applying = false;
 
   function activeRules() {
-    var host = location.hostname;
+    var host = location.hostname.replace(/^www\./, "");
     var path = location.pathname;
     return rules.filter(function (r) {
-      return r.enabled && (r.host === "*" || r.host === host) && (r.path === "/" || path.indexOf(r.path) === 0);
+      return r.enabled && (r.host === "*" || r.host.replace(/^www\./, "") === host) && (r.path === "/" || path.indexOf(r.path) === 0);
     });
   }
 

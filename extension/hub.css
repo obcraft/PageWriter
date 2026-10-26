@@ -1,0 +1,24 @@
+body.hub { min-height: 100vh; font-size: 14px; }
+.hubtop { padding: 16px 32px; position: sticky; top: 0; background: var(--paper); z-index: 2; }
+.hubtop .name { font-size: 24px; }
+.hubtop .name em { color: var(--signal); font-style: italic; }
+.tabs { margin-left: auto; display: flex; gap: 6px; }
+.tab { border: 1.5px solid var(--ink); background: transparent; padding: 7px 16px; border-radius: 999px; cursor: pointer; font: inherit; }
+.tab.active { background: var(--ink); color: var(--paper); }
+.hubmain { max-width: 1200px; margin: 0 auto; padding: 28px 32px 60px; }
+.filters { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 14px; }
+.filters input { border: 1.5px solid var(--ink); border-radius: 10px; padding: 9px 12px; font: inherit; background: #fffdf9; min-width: 240px; }
+.quick { display: flex; gap: 6px; flex-wrap: wrap; }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; margin-top: 12px; }
+.card { border: 1.5px solid var(--ink); border-radius: 14px; background: #fffdf9; padding: 16px; display: flex; flex-direction: column; gap: 8px; box-shadow: 4px 4px 0 var(--line); }
+.card h3 { margin: 0; font-family: Georgia, serif; font-size: 19px; font-weight: normal; }
+.card .site { font-family: var(--mono); font-size: 11px; color: var(--signal); text-transform: uppercase; letter-spacing: .05em; }
+.card .desc { color: var(--ink-2); margin: 0; }
+.card ul { margin: 0; padding-left: 18px; color: var(--ink-2); font-size: 12px; }
+.card .meta { font-size: 12px; color: var(--ink-2); margin-top: auto; }
+.card .row { display: flex; gap: 8px; }
+.card .btn { width: auto; }
+.dlg { border: 1.5px solid var(--ink); border-radius: 14px; background: var(--paper); padding: 22px; width: min(460px, 92vw); }
+.dlg::backdrop { background: rgba(22, 20, 18, .45); }
+.dlg h2 { margin: 0 0 6px; font-family: Georgia, serif; font-weight: normal; }
+.dlg input, .dlg textarea { width: 100%; border: 1.5px solid var(--ink); border-radius: 10px; padding: 9px 12px; font: inherit; background: #fffdf9; margin-bottom: 10px; }
