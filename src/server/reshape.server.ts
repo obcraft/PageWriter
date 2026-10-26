@@ -1,14 +1,7 @@
-import { createOpenAI } from "@ai-sdk/openai";
-import { NoObjectGeneratedError, Output, streamText } from "ai";
 import { z } from "zod";
 
-import {
-  createLovableAiGatewayRunIdFetch,
-  getLovableAiGatewayRunId,
-} from "./ai/run-id.ts";
-
-const GATEWAY_URL = "https://ai.gateway.lovable.dev/v1";
-const MODEL = "openai/gpt-6-astra";
+const OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions";
+const MODEL = "anthropic/claude-opus-5.5";
 
 export const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",
@@ -102,9 +95,6 @@ function json(body: unknown, status = 200) {
 }
 
 export async function handleReshape(request: Request): Promise<Response> {
-  const apiKey = process.env["LOVABLE_API_KEY"];
-  if (!apiKey) return json({ error: "The AI service is not configured." }, 500);
-
   let input: z.infer<typeof RequestSchema>;
   try {
     const parsed = RequestSchema.safeParse(await request.json());
@@ -114,19 +104,13 @@ export async function handleReshape(request: Request): Promise<Response> {
     return json({ error: "Invalid JSON body." }, 400);
   }
 
-  const runIdFetch = createLovableAiGatewayRunIdFetch(getLovableAiGatewayRunId(request));
-  const provider = createOpenAI({
-    baseURL: GATEWAY_URL,
-    apiKey,
-    headers: { "Lovable-API-Key": apiKey, "X-Lovable-AIG-SDK": "vercel-ai-sdk" },
-    fetch: runIdFetch.fetch,
-  });
+  const apiKey = process.env["OPENROUTER_API_KEY"];
+  if (!apiKey) return json({ error: "OpenRouter is not connected yet. Add your OpenRouter API key to enable page editing." }, 503);
 
-  let upstreamError: unknown = null;
-  const result = streamText({
-    model: provider.responses(MODEL),
-    instructions: INSTRUCTIONS,
+  const body = {
+    model: MODEL,
     messages: [
+      { role: "system", content: INSTRUCTIONS },
       {
         role: "user",
         content:
@@ -137,40 +121,49 @@ export async function handleReshape(request: Request): Promise<Response> {
           `DOM outline:\n${input.dom}`,
       },
     ],
-    output: Output.object({ schema: PlanSchema }),
-    abortSignal: request.signal,
-    onError: ({ error }) => {
-      upstreamError = error;
-    },
-    providerOptions: {
-      openai: {
-        store: false,
-        forceReasoning: true,
-        reasoningEffort: "low",
-        reasoningSummary: "auto",
-        include: ["reasoning.encrypted_content"],
+    response_format: {
+      type: "json_schema",
+      json_schema: {
+        name: "pagewright_plan",
+        strict: true,
+        schema: z.toJSONSchema(PlanSchema),
       },
     },
-  });
+    provider: { require_parameters: true },
+    max_tokens: 8000,
+  };
 
   try {
-    const plan = await result.output;
-    return json(plan);
-  } catch (error) {
-    if (NoObjectGeneratedError.isInstance(error)) {
-      try {
-        const fallback = PlanSchema.parse(JSON.parse(error.text ?? ""));
-        return json(fallback);
-      } catch {
-        return json({ error: "The AI returned an unreadable plan. Try rephrasing." }, 502);
-      }
+    const response = await fetch(OPENROUTER_URL, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
+        "X-OpenRouter-Title": "Pagewright",
+      },
+      body: JSON.stringify(body),
+      signal: request.signal,
+    });
+    if (!response.ok) {
+      // Do not echo upstream bodies: they can contain submitted page content.
+      console.error("OpenRouter request failed", response.status);
+      const message = response.status === 402
+        ? "Your OpenRouter balance is empty. Add credits to your OpenRouter account."
+        : response.status === 401
+          ? "Your OpenRouter API key is invalid. Update it to continue."
+          : response.status === 429
+            ? "OpenRouter is busy. Wait a moment and try again."
+            : "OpenRouter could not complete the request. Try again.";
+      return json({ error: message }, [401, 402, 403, 429].includes(response.status) ? response.status : 502);
     }
-    const err = (upstreamError ?? error) as { statusCode?: number; message?: string };
-    const status = err?.statusCode;
-    if (status === 402) return json({ error: "AI credits are used up for this workspace." }, 402);
-    if (status === 429) return json({ error: "Too many requests right now. Wait a moment and try again." }, 429);
-    if (status === 403) return json({ error: err.message ?? "AI access was denied." }, 403);
-    console.error("reshape failed", error);
+    const result = await response.json() as { choices?: { message?: { content?: string } }[] };
+    try {
+      return json(PlanSchema.parse(JSON.parse(result.choices?.[0]?.message?.content ?? "")));
+    } catch {
+      return json({ error: "The AI returned an unreadable plan. Try rephrasing." }, 502);
+    }
+  } catch {
+    console.error("OpenRouter request could not complete");
     return json({ error: "The AI request failed. Try again." }, 502);
   }
 }
