@@ -26,3 +26,30 @@ body.hub { min-height: 100vh; font-size: 14px; }
 .account { display: flex; align-items: center; gap: 8px; margin-left: 16px; }
 .account .btn { width: auto; }
 .dlg a { color: var(--signal); }
+
+.sectiontitle { font-family: Georgia, serif; font-weight: normal; font-size: 28px; margin: 0 0 14px; }
+.ctl { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--ink-2); }
+.ctl select { border: 1.5px solid var(--ink); border-radius: 10px; padding: 8px 10px; font: inherit; background: #fffdf9; }
+.seg { display: inline-flex; border: 1.5px solid var(--ink); border-radius: 10px; overflow: hidden; }
+.seg button { border: 0; background: #fffdf9; padding: 8px 12px; font: inherit; cursor: pointer; }
+.seg button + button { border-left: 1.5px solid var(--ink); }
+.seg button.active { background: var(--ink); color: var(--paper); }
+.like { border: 1.5px solid var(--ink); background: transparent; border-radius: 999px; padding: 6px 12px; cursor: pointer; font: inherit; display: inline-flex; gap: 6px; align-items: center; }
+.like.on { background: var(--signal); border-color: var(--signal); color: #fff; }
+.card .top { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
+.rank { font-family: Georgia, serif; font-style: italic; color: var(--signal); font-size: 22px; line-height: 1; }
+/* list view */
+.grid.list { grid-template-columns: 1fr; }
+.grid.list .card { flex-direction: row; align-items: center; gap: 18px; }
+.grid.list .card .body { flex: 1; min-width: 0; }
+.grid.list .card ul { display: none; }
+.grid.list .card .meta { margin-top: 4px; }
+/* compact view */
+.grid.compact { grid-template-columns: 1fr; gap: 0; border: 1.5px solid var(--ink); border-radius: 14px; overflow: hidden; background: #fffdf9; }
+.grid.compact .card { flex-direction: row; align-items: center; border: 0; border-radius: 0; box-shadow: none; padding: 10px 14px; gap: 14px; }
+.grid.compact .card + .card { border-top: 1px solid var(--line); }
+.grid.compact .card .body { flex: 1; min-width: 0; display: flex; gap: 12px; align-items: baseline; }
+.grid.compact .card h3 { font-size: 16px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.grid.compact .card .desc, .grid.compact .card ul { display: none; }
+.grid.compact .card .meta { margin: 0; white-space: nowrap; }
+.grid.compact .btn, .grid.compact .like { padding: 5px 10px; font-size: 12px; }

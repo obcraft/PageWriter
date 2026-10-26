@@ -25,40 +25,104 @@ async function getRules() { return (await chrome.storage.local.get("rules")).rul
 
 /* ---------- Browse ---------- */
 var timer;
+var currentTab = "popular";
+var view = "grid";
+var lastConfigs = [];
+
 async function load() {
+  var popular = currentTab === "popular";
   var site = bareHost($("siteFilter").value.trim());
   var q = $("search").value.trim();
+  var sort = popular ? "popular" : $("sort").value;
+  $("sortWrap").hidden = popular;
+  $("browseTitle").textContent = popular ? "Most liked setups" + (site ? " for " + site : "") : "Browse all setups";
   $("browseMsg").textContent = "Loading…";
   try {
-    var url = server + "/api/public/configs?" + new URLSearchParams(Object.assign({}, site ? { host: site } : {}, q ? { q: q } : {}));
-    var res = await fetch(url);
+    var p = { sort: sort, limit: popular ? "30" : "100" };
+    if (site) p.host = site;
+    if (q) p.q = q;
+    var token = await accessToken().catch(function () { return null; });
+    var res = await fetch(server + "/api/public/configs?" + new URLSearchParams(p), {
+      headers: token ? { Authorization: "Bearer " + token } : {},
+    });
     var data = await res.json();
     if (!res.ok) throw new Error(data.error || "Couldn't load.");
-    var installed = new Set((await getRules()).map(function (r) { return r.sharedId; }).filter(Boolean));
-    renderGrid(data.configs || [], installed);
-    $("browseMsg").textContent = data.configs.length ? "" : "No shared setups yet" + (site ? " for " + site : "") + ". Be the first — share one from “My setups”.";
+    lastConfigs = data.configs || [];
+    var sites = {};
+    lastConfigs.forEach(function (c) { if (c.host !== "*") sites[c.host] = 1; });
+    $("siteList").innerHTML = "";
+    Object.keys(sites).sort().forEach(function (h) { var o = el("option"); o.value = h; $("siteList").appendChild(o); });
+    await draw();
   } catch (e) {
     $("grid").innerHTML = "";
     $("browseMsg").textContent = "Couldn't reach the Pagewright server.";
   }
 }
 
+async function draw() {
+  var list = lastConfigs;
+  if ($("likedOnly").checked) list = list.filter(function (c) { return c.liked; });
+  var installed = new Set((await getRules()).map(function (r) { return r.sharedId; }).filter(Boolean));
+  renderGrid(list, installed);
+  var site = bareHost($("siteFilter").value.trim());
+  $("browseMsg").textContent = list.length
+    ? list.length + " setup" + (list.length === 1 ? "" : "s")
+    : $("likedOnly").checked ? "You haven't liked anything here yet." : "No shared setups yet" + (site ? " for " + site : "") + ". Be the first — share one from “My setups”.";
+}
+
+function setView(v) {
+  view = v;
+  chrome.storage.local.set({ hubView: v });
+  document.querySelectorAll(".seg button").forEach(function (b) { b.classList.toggle("active", b.dataset.view === v); });
+  $("grid").className = "grid " + (v === "grid" ? "" : v);
+}
+
+function likeButton(c) {
+  var b = el("button", "like" + (c.liked ? " on" : ""), (c.liked ? "♥ " : "♡ ") + (c.likes || 0));
+  b.title = c.liked ? "Unlike" : "Like";
+  b.addEventListener("click", async function () {
+    var token = await accessToken();
+    if (!token) return openAuth(false);
+    b.disabled = true;
+    try {
+      var res = await fetch(server + "/api/public/configs/" + c.id + "/like", {
+        method: "POST", headers: { Authorization: "Bearer " + token },
+      });
+      var d = await res.json();
+      if (!res.ok) throw new Error(d.error);
+      c.liked = d.liked; c.likes = d.likes;
+      b.className = "like" + (c.liked ? " on" : "");
+      b.textContent = (c.liked ? "♥ " : "♡ ") + c.likes;
+      if ($("likedOnly").checked) draw();
+    } catch (e) {} finally { b.disabled = false; }
+  });
+  return b;
+}
+
 function renderGrid(configs, installed) {
   var grid = $("grid");
   grid.innerHTML = "";
-  configs.forEach(function (c) {
+  configs.forEach(function (c, i) {
     var card = el("article", "card");
-    card.appendChild(el("span", "site", c.host === "*" ? "all websites" : c.host));
-    card.appendChild(el("h3", null, c.title));
-    if (c.description) card.appendChild(el("p", "desc", c.description));
-    card.appendChild(stepsList(c.operations));
-    card.appendChild(el("div", "meta", "by @" + c.author_name + " · " + c.installs + " tried"));
+    var body = el("div", "body");
+    var top = el("div", "top");
+    var left = el("div");
+    left.appendChild(el("span", "site", c.host === "*" ? "all websites" : c.host));
+    left.appendChild(el("h3", null, c.title));
+    top.appendChild(left);
+    if (currentTab === "popular" && view === "grid") top.appendChild(el("span", "rank", "#" + (i + 1)));
+    body.appendChild(top);
+    if (c.description) body.appendChild(el("p", "desc", c.description));
+    body.appendChild(stepsList(c.operations));
+    body.appendChild(el("div", "meta", "by @" + c.author_name + " · " + c.installs + " tried · " + new Date(c.created_at).toLocaleDateString()));
+    card.appendChild(body);
     var row = el("div", "row");
+    row.appendChild(likeButton(c));
     var btn = el("button", "btn primary", installed.has(c.id) ? "Added ✓" : "Try it");
     btn.disabled = installed.has(c.id);
     btn.addEventListener("click", function () { tryConfig(c, btn); });
     row.appendChild(btn);
-    if (c.host !== "*") {
+    if (c.host !== "*" && view !== "compact") {
       var open = el("button", "btn", "Open site");
       open.addEventListener("click", function () { chrome.tabs.create({ url: "https://" + c.host }); });
       row.appendChild(open);
@@ -192,6 +256,7 @@ async function accessToken() {
 }
 
 async function renderAccount() {
+  if (lastConfigs.length && !$("browse").hidden) setTimeout(load, 0);
   var acc = await getAccount();
   $("whoami").hidden = !acc;
   $("whoami").textContent = acc ? "@" + acc.username : "";
@@ -249,14 +314,20 @@ $("authForm").addEventListener("submit", async function (e) {
 
 /* ---------- Tabs & init ---------- */
 function show(tab) {
+  currentTab = tab;
   document.querySelectorAll(".tab").forEach(function (t) { t.classList.toggle("active", t.dataset.tab === tab); });
-  $("browse").hidden = tab !== "browse";
+  $("browse").hidden = tab === "mine";
   $("mine").hidden = tab !== "mine";
   if (tab === "mine") renderMine(); else load();
 }
 document.querySelectorAll(".tab").forEach(function (t) { t.addEventListener("click", function () { show(t.dataset.tab); }); });
 document.querySelectorAll(".quick .chip").forEach(function (c) {
   c.addEventListener("click", function () { $("siteFilter").value = c.dataset.site; load(); });
+});
+$("sort").addEventListener("change", load);
+$("likedOnly").addEventListener("change", draw);
+document.querySelectorAll(".seg button").forEach(function (b) {
+  b.addEventListener("click", function () { setView(b.dataset.view); draw(); });
 });
 ["siteFilter", "search"].forEach(function (id) {
   $(id).addEventListener("input", function () { clearTimeout(timer); timer = setTimeout(load, 300); });
@@ -266,6 +337,7 @@ document.querySelectorAll(".quick .chip").forEach(function (c) {
   var s = await chrome.storage.local.get("serverUrl");
   server = (s.serverUrl || DEFAULT_SERVER).replace(/\/+$/, "");
   renderAccount();
+  setView((await chrome.storage.local.get("hubView")).hubView || "grid");
   var host = params.get("host");
   if (host && !/^(newtab|extensions)$/.test(host)) $("siteFilter").value = bareHost(host);
   var shareId = params.get("share");
@@ -274,6 +346,6 @@ document.querySelectorAll(".quick .chip").forEach(function (c) {
     var rule = (await getRules()).find(function (r) { return r.id === shareId; });
     if (rule) openShare(rule);
   } else {
-    show("browse");
+    show("popular");
   }
 })();

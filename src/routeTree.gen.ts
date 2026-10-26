@@ -14,6 +14,7 @@ import { Route as ApiPublicConfigsRouteImport } from './routes/api/public/config
 import { Route as ApiPublicReshapeRouteImport } from './routes/api/public/reshape'
 import { Route as ApiPublicAuthActionRouteImport } from './routes/api/public/auth.$action'
 import { Route as ApiPublicConfigsIdInstallRouteImport } from './routes/api/public/configs.$id.install'
+import { Route as ApiPublicConfigsIdLikeRouteImport } from './routes/api/public/configs.$id.like'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -41,6 +42,11 @@ const ApiPublicConfigsIdInstallRoute =
     path: '/$id/install',
     getParentRoute: () => ApiPublicConfigsRoute,
   } as any)
+const ApiPublicConfigsIdLikeRoute = ApiPublicConfigsIdLikeRouteImport.update({
+  id: '/$id/like',
+  path: '/$id/like',
+  getParentRoute: () => ApiPublicConfigsRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -48,6 +54,7 @@ export interface FileRoutesByFullPath {
   '/api/public/reshape': typeof ApiPublicReshapeRoute
   '/api/public/auth/$action': typeof ApiPublicAuthActionRoute
   '/api/public/configs/$id/install': typeof ApiPublicConfigsIdInstallRoute
+  '/api/public/configs/$id/like': typeof ApiPublicConfigsIdLikeRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -55,6 +62,7 @@ export interface FileRoutesByTo {
   '/api/public/reshape': typeof ApiPublicReshapeRoute
   '/api/public/auth/$action': typeof ApiPublicAuthActionRoute
   '/api/public/configs/$id/install': typeof ApiPublicConfigsIdInstallRoute
+  '/api/public/configs/$id/like': typeof ApiPublicConfigsIdLikeRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -63,6 +71,7 @@ export interface FileRoutesById {
   '/api/public/reshape': typeof ApiPublicReshapeRoute
   '/api/public/auth/$action': typeof ApiPublicAuthActionRoute
   '/api/public/configs/$id/install': typeof ApiPublicConfigsIdInstallRoute
+  '/api/public/configs/$id/like': typeof ApiPublicConfigsIdLikeRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -72,6 +81,7 @@ export interface FileRouteTypes {
     | '/api/public/reshape'
     | '/api/public/auth/$action'
     | '/api/public/configs/$id/install'
+    | '/api/public/configs/$id/like'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -79,6 +89,7 @@ export interface FileRouteTypes {
     | '/api/public/reshape'
     | '/api/public/auth/$action'
     | '/api/public/configs/$id/install'
+    | '/api/public/configs/$id/like'
   id:
     | '__root__'
     | '/'
@@ -86,6 +97,7 @@ export interface FileRouteTypes {
     | '/api/public/reshape'
     | '/api/public/auth/$action'
     | '/api/public/configs/$id/install'
+    | '/api/public/configs/$id/like'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -132,15 +144,24 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicConfigsIdInstallRouteImport
       parentRoute: typeof ApiPublicConfigsRoute
     }
+    '/api/public/configs/$id/like': {
+      id: '/api/public/configs/$id/like'
+      path: '/$id/like'
+      fullPath: '/api/public/configs/$id/like'
+      preLoaderRoute: typeof ApiPublicConfigsIdLikeRouteImport
+      parentRoute: typeof ApiPublicConfigsRoute
+    }
   }
 }
 
 interface ApiPublicConfigsRouteChildren {
   ApiPublicConfigsIdInstallRoute: typeof ApiPublicConfigsIdInstallRoute
+  ApiPublicConfigsIdLikeRoute: typeof ApiPublicConfigsIdLikeRoute
 }
 
 const ApiPublicConfigsRouteChildren: ApiPublicConfigsRouteChildren = {
   ApiPublicConfigsIdInstallRoute: ApiPublicConfigsIdInstallRoute,
+  ApiPublicConfigsIdLikeRoute: ApiPublicConfigsIdLikeRoute,
 }
 
 const ApiPublicConfigsRouteWithChildren =

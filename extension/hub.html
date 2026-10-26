@@ -13,7 +13,8 @@
         <span class="name">Pagewright <em>Community</em></span>
       </div>
       <nav class="tabs">
-        <button data-tab="browse" class="tab active">Browse</button>
+        <button data-tab="popular" class="tab active">Popular</button>
+        <button data-tab="browse" class="tab">Browse</button>
         <button data-tab="mine" class="tab">My setups</button>
       </nav>
       <div class="account">
@@ -25,9 +26,25 @@
 
     <main class="hubmain">
       <section id="browse">
+        <h2 id="browseTitle" class="sectiontitle"></h2>
         <div class="filters">
-          <input id="siteFilter" placeholder="Website, e.g. reddit.com" spellcheck="false" />
-          <input id="search" placeholder="Search setups…" />
+          <input id="siteFilter" list="siteList" placeholder="Website, e.g. reddit.com" spellcheck="false" />
+          <datalist id="siteList"></datalist>
+          <input id="search" placeholder="Search titles, descriptions, makers…" />
+          <label class="ctl" id="sortWrap">Sort
+            <select id="sort">
+              <option value="popular">Most liked</option>
+              <option value="newest">Newest</option>
+              <option value="tried">Most tried</option>
+              <option value="title">A–Z</option>
+            </select>
+          </label>
+          <div class="seg" role="group" aria-label="View">
+            <button data-view="grid" class="active" title="Grid">▦ Grid</button>
+            <button data-view="list" title="List">☰ List</button>
+            <button data-view="compact" title="Compact">≡ Compact</button>
+          </div>
+          <label class="ctl"><input type="checkbox" id="likedOnly" /> Only my likes</label>
           <div class="quick">
             <button class="chip" data-site="">All</button>
             <button class="chip" data-site="reddit.com">Reddit</button>
