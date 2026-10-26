@@ -37,28 +37,71 @@ async function admin() {
   return (await import("@/integrations/supabase/client.server")).supabaseAdmin;
 }
 
+const SORTS = {
+  popular: ["likes", "installs", "created_at"],
+  newest: ["created_at"],
+  tried: ["installs", "likes", "created_at"],
+  title: ["title"],
+} as const;
+
 export async function listConfigs(request: Request) {
   const url = new URL(request.url);
   const host = url.searchParams.get("host");
   const q = (url.searchParams.get("q") ?? "").trim().slice(0, 80);
+  const sortKey = (url.searchParams.get("sort") ?? "popular") as keyof typeof SORTS;
+  const sort = SORTS[sortKey] ?? SORTS.popular;
+  const limit = Math.min(Number(url.searchParams.get("limit")) || 60, 100);
   const db = await admin();
   let query = db
     .from("shared_configs")
-    .select("id, host, title, description, author_name, instruction, operations, installs, created_at")
-    .order("installs", { ascending: false })
-    .order("created_at", { ascending: false })
-    .limit(60);
+    .select("id, host, title, description, author_name, instruction, operations, installs, likes, created_at");
+  for (const col of sort) query = query.order(col, { ascending: col === "title" });
+  query = query.limit(limit);
   if (host) {
     const h = normalizeHost(host);
-    query = query.in("host", [h, "www." + h, "*"]);
+    query = query.or(`host.eq.*,host.ilike.%${h.replace(/[%_,()*]/g, "")}%`);
   }
   if (q) {
-    const safe = q.replace(/[%_,()]/g, " ");
-    query = query.or(`title.ilike.%${safe}%,description.ilike.%${safe}%,host.ilike.%${safe}%`);
+    const safe = q.replace(/[%_,()*]/g, " ");
+    query = query.or(`title.ilike.%${safe}%,description.ilike.%${safe}%,host.ilike.%${safe}%,author_name.ilike.%${safe}%`);
   }
   const { data, error } = await query;
   if (error) return json({ error: "Couldn't load shared setups." }, 500);
-  return json({ configs: data });
+
+  // Mark which ones the signed-in caller has liked.
+  let liked = new Set<string>();
+  const { userFromRequest } = await import("./auth.server");
+  const user = await userFromRequest(request);
+  if (user && data.length) {
+    const { data: rows } = await db
+      .from("config_likes")
+      .select("config_id")
+      .eq("user_id", user.id)
+      .in("config_id", data.map((d) => d.id));
+    liked = new Set((rows ?? []).map((r) => r.config_id));
+  }
+  return json({ configs: data.map((d) => ({ ...d, liked: liked.has(d.id) })) });
+}
+
+export async function toggleLike(request: Request, id: string) {
+  if (!z.string().uuid().safeParse(id).success) return json({ error: "Not found" }, 404);
+  const { userFromRequest } = await import("./auth.server");
+  const user = await userFromRequest(request);
+  if (!user) return json({ error: "Sign in to like setups." }, 401);
+  const db = await admin();
+  const { data: existing } = await db
+    .from("config_likes")
+    .select("config_id")
+    .eq("config_id", id)
+    .eq("user_id", user.id)
+    .maybeSingle();
+  if (existing) await db.from("config_likes").delete().eq("config_id", id).eq("user_id", user.id);
+  else {
+    const { error } = await db.from("config_likes").insert({ config_id: id, user_id: user.id });
+    if (error) return json({ error: "Not found" }, 404);
+  }
+  const { data } = await db.from("shared_configs").select("likes").eq("id", id).maybeSingle();
+  return json({ liked: !existing, likes: data?.likes ?? 0 });
 }
 
 export async function createConfig(request: Request) {
