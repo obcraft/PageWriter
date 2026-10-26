@@ -82,7 +82,7 @@ export async function createConfig(request: Request) {
       description: c.description,
       author_name: c.authorName || "Anonymous",
       instruction: c.instruction,
-      operations: c.operations,
+      operations: c.operations as unknown as import("@/integrations/supabase/types").Json,
     })
     .select("id")
     .single();
