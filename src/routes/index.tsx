@@ -229,16 +229,16 @@ function SpellDemo() {
                   }}
                 >
                   <div
-                    className={`h-9 w-9 shrink-0 rounded-full ${p.key === "ad" ? "bg-signal/70" : "bg-paper-deep/60"}`}
+                    className={`${bigger ? "h-11 w-11" : "h-9 w-9"} shrink-0 rounded-full ${p.key === "ad" ? "bg-signal/70" : "bg-paper-deep/60"}`}
                   />
                   <div className="min-w-0 flex-1">
                     <div className="flex items-baseline gap-2">
-                      <span className="truncate text-sm font-semibold">{p.name}</span>
+                      <span className={`${bigger ? "text-base" : "text-sm"} font-semibold`}>{p.name}</span>
                       <span className={`label-mono ${sorted ? "text-signal" : "opacity-50"}`}>
                         {p.time}
                       </span>
                     </div>
-                    <p className="truncate text-sm opacity-70">{p.text}</p>
+                    <p className={`${bigger ? "text-base" : "text-sm"} truncate opacity-70`}>{p.text}</p>
                   </div>
                 </div>
               );
