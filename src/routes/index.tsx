@@ -126,7 +126,7 @@ function SpellDemo() {
     let i = 0;
     let s = 0;
     const type = () => {
-      const text = SPELLS[s].say;
+      const text = SPELLS[s]!.say;
       if (i <= text.length) {
         setTyped(i++);
         t = setTimeout(type, 42);
@@ -200,7 +200,7 @@ function SpellDemo() {
             </div>
             {POSTS.map((p) => {
               const hidden = hideAd && p.key === "ad";
-              const y = layout.ys[p.key] ?? layout.ys.a ?? 0;
+              const y = layout.ys[p.key] ?? layout.ys["a"] ?? 0;
               return (
                 <div
                   key={p.key}
@@ -239,7 +239,7 @@ function SpellDemo() {
         </div>
         <div className="rounded-2xl border border-gold/40 bg-background/60 p-3 font-mono text-sm">
           <span className="text-gold">› </span>
-          {SPELLS[casting].say.slice(0, typed)}
+          {SPELLS[casting]!.say.slice(0, typed)}
           <span className="animate-caret ml-0.5 inline-block h-4 w-[2px] translate-y-0.5 bg-gold" />
         </div>
         <ul className="mt-4 space-y-2 text-sm">
