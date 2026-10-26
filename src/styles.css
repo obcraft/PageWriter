@@ -37,6 +37,10 @@
   --color-signal: var(--signal);
   --color-signal-foreground: var(--signal-foreground);
   --color-paper-deep: var(--paper-deep);
+  --color-gold: var(--gold);
+  --color-page: var(--page);
+  --color-page-foreground: var(--page-foreground);
+  --color-page-muted: var(--page-muted);
   --color-destructive: var(--destructive);
   --color-destructive-foreground: var(--destructive-foreground);
   --color-border: var(--border);
@@ -58,46 +62,51 @@
   --color-sidebar-ring: var(--sidebar-ring);
   --shadow-offset: 5px 5px 0 0 var(--signal);
   --shadow-offset-sm: 3px 3px 0 0 var(--signal);
+  --shadow-glow: 0 0 0 1px color-mix(in oklab, var(--gold) 40%, transparent), 0 30px 80px -30px color-mix(in oklab, var(--signal) 55%, transparent);
   --shadow-paper: 0 1px 0 0 var(--border), 0 18px 40px -24px oklch(0.2 0.02 60 / 35%);
 }
 
 :root {
-  --radius: 0.75rem;
-  --background: oklch(0.955 0.013 82);
-  --foreground: oklch(0.19 0.008 60);
-  --card: oklch(0.99 0.006 85);
-  --card-foreground: oklch(0.19 0.008 60);
-  --popover: oklch(0.99 0.006 85);
-  --popover-foreground: oklch(0.19 0.008 60);
-  --primary: oklch(0.19 0.008 60);
-  --primary-foreground: oklch(0.955 0.013 82);
-  --secondary: oklch(0.915 0.018 82);
-  --secondary-foreground: oklch(0.19 0.008 60);
-  --muted: oklch(0.915 0.018 82);
-  --muted-foreground: oklch(0.45 0.015 60);
-  --accent: oklch(0.915 0.018 82);
-  --accent-foreground: oklch(0.19 0.008 60);
-  --signal: oklch(0.68 0.2 38);
-  --signal-foreground: oklch(0.985 0.01 60);
-  --paper-deep: oklch(0.89 0.022 80);
-  --destructive: oklch(0.55 0.2 27);
+  --radius: 0.9rem;
+  --background: oklch(0.16 0.025 255);
+  --foreground: oklch(0.95 0.02 85);
+  --card: oklch(0.21 0.03 255);
+  --card-foreground: oklch(0.95 0.02 85);
+  --popover: oklch(0.21 0.03 255);
+  --popover-foreground: oklch(0.95 0.02 85);
+  --primary: oklch(0.95 0.02 85);
+  --primary-foreground: oklch(0.16 0.025 255);
+  --secondary: oklch(0.25 0.03 255);
+  --secondary-foreground: oklch(0.95 0.02 85);
+  --muted: oklch(0.25 0.03 255);
+  --muted-foreground: oklch(0.72 0.025 250);
+  --accent: oklch(0.82 0.13 85);
+  --accent-foreground: oklch(0.16 0.025 255);
+  --signal: oklch(0.74 0.18 45);
+  --signal-foreground: oklch(0.16 0.025 255);
+  --gold: oklch(0.85 0.12 85);
+  --paper-deep: oklch(0.3 0.03 255);
+  --page: oklch(0.96 0.015 85);
+  --page-foreground: oklch(0.2 0.02 255);
+  --page-muted: oklch(0.88 0.02 85);
+  --destructive: oklch(0.6 0.2 27);
   --destructive-foreground: oklch(0.985 0.01 60);
-  --border: oklch(0.86 0.02 80);
-  --input: oklch(0.86 0.02 80);
-  --ring: oklch(0.68 0.2 38);
-  --chart-1: oklch(0.68 0.2 38);
+  --border: oklch(0.32 0.03 255);
+  --input: oklch(0.32 0.03 255);
+  --ring: oklch(0.82 0.13 85);
+  --chart-1: oklch(0.74 0.18 45);
   --chart-2: oklch(0.6 0.118 184.704);
   --chart-3: oklch(0.398 0.07 227.392);
   --chart-4: oklch(0.828 0.189 84.429);
   --chart-5: oklch(0.769 0.188 70.08);
-  --sidebar: oklch(0.955 0.013 82);
-  --sidebar-foreground: oklch(0.19 0.008 60);
-  --sidebar-primary: oklch(0.19 0.008 60);
-  --sidebar-primary-foreground: oklch(0.955 0.013 82);
-  --sidebar-accent: oklch(0.915 0.018 82);
-  --sidebar-accent-foreground: oklch(0.19 0.008 60);
-  --sidebar-border: oklch(0.86 0.02 80);
-  --sidebar-ring: oklch(0.68 0.2 38);
+  --sidebar: oklch(0.16 0.025 255);
+  --sidebar-foreground: oklch(0.95 0.02 85);
+  --sidebar-primary: oklch(0.95 0.02 85);
+  --sidebar-primary-foreground: oklch(0.16 0.025 255);
+  --sidebar-accent: oklch(0.25 0.03 255);
+  --sidebar-accent-foreground: oklch(0.95 0.02 85);
+  --sidebar-border: oklch(0.32 0.03 255);
+  --sidebar-ring: oklch(0.82 0.13 85);
 }
 
 @layer base {
@@ -126,7 +135,7 @@
   text-transform: uppercase;
 }
 
-@utility paper-grid {
+@utility paper-grid-old {
   background-image:
     linear-gradient(to right, oklch(0.19 0.008 60 / 5%) 1px, transparent 1px),
     linear-gradient(to bottom, oklch(0.19 0.008 60 / 5%) 1px, transparent 1px);
@@ -141,4 +150,62 @@
 
 @utility animate-caret {
   animation: caret 1s steps(1) infinite;
+}
+
+@utility night-sky {
+  background-color: var(--background);
+  background-image:
+    radial-gradient(1px 1px at 12% 18%, color-mix(in oklab, var(--gold) 80%, transparent), transparent),
+    radial-gradient(1px 1px at 72% 9%, color-mix(in oklab, var(--foreground) 70%, transparent), transparent),
+    radial-gradient(1.5px 1.5px at 38% 62%, color-mix(in oklab, var(--gold) 60%, transparent), transparent),
+    radial-gradient(1px 1px at 88% 44%, color-mix(in oklab, var(--foreground) 60%, transparent), transparent),
+    radial-gradient(1px 1px at 22% 82%, color-mix(in oklab, var(--foreground) 50%, transparent), transparent),
+    radial-gradient(1.5px 1.5px at 60% 30%, color-mix(in oklab, var(--foreground) 40%, transparent), transparent),
+    radial-gradient(900px 500px at 80% -10%, color-mix(in oklab, var(--signal) 18%, transparent), transparent 70%),
+    radial-gradient(700px 500px at -10% 40%, color-mix(in oklab, var(--gold) 9%, transparent), transparent 70%);
+  background-size: 480px 480px, 520px 520px, 610px 610px, 390px 390px, 450px 450px, 700px 700px, 100% 100%, 100% 100%;
+}
+
+@utility text-shimmer {
+  background: linear-gradient(100deg, var(--gold) 20%, var(--foreground) 40%, var(--signal) 60%, var(--gold) 80%);
+  background-size: 250% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: shimmer 6s linear infinite;
+}
+
+@keyframes shimmer {
+  to { background-position: -250% 0; }
+}
+
+@keyframes spark {
+  0% { opacity: 1; transform: translate(-50%, -50%) scale(1) rotate(0deg); }
+  100% { opacity: 0; transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(0.2) rotate(140deg); }
+}
+
+@utility animate-spark {
+  animation: spark 900ms ease-out forwards;
+}
+
+@keyframes float-slow {
+  0%, 100% { transform: translateY(0) rotate(var(--r, 0deg)); }
+  50% { transform: translateY(-10px) rotate(var(--r, 0deg)); }
+}
+
+@utility animate-float {
+  animation: float-slow 6s ease-in-out infinite;
+}
+
+@keyframes ripple {
+  0% { clip-path: circle(0% at var(--x, 80%) var(--y, 20%)); }
+  100% { clip-path: circle(150% at var(--x, 80%) var(--y, 20%)); }
+}
+
+@utility animate-ripple {
+  animation: ripple 900ms cubic-bezier(.6,.05,.3,1) forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-float, .text-shimmer, .animate-spark { animation: none !important; }
 }
