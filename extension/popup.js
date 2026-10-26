@@ -9,6 +9,11 @@ var STATUS_TEXT = {
 };
 
 function render(state) {
+  var t = state && state.target;
+  $("target").hidden = !t;
+  if (t) $("targetText").textContent = "This: " + t.label;
+  $("pick").textContent = state && state.picking ? "Click it on the page… (Esc)" : t ? "⌖ Pick another" : "⌖ Pick element";
+  $("instruction").placeholder = t ? "e.g. make this bigger · move this to the bottom · hide these" : "e.g. sort the posts in chronological order, newest first";
   var busy = state && STATUS_TEXT[state.status];
   $("run").disabled = !!busy;
   $("status").hidden = !busy;
@@ -102,6 +107,8 @@ async function init() {
   });
 
   $("run").addEventListener("click", run);
+  $("pick").addEventListener("click", function () { chrome.runtime.sendMessage({ type: "pick", tabId: tab.id }); });
+  $("clearTarget").addEventListener("click", function () { chrome.runtime.sendMessage({ type: "clearTarget", tabId: tab.id }); });
   $("instruction").addEventListener("keydown", function (e) {
     if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) { e.preventDefault(); run(); }
   });
