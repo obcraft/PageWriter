@@ -33,8 +33,11 @@ function render(state) {
     });
     var canKeep = (state.operations || []).length > 0;
     $("keep").hidden = !canKeep;
+    $("keepAll").hidden = !canKeep;
     $("keep").disabled = !!state.saved;
-    $("keep").textContent = state.saved ? "Kept ✓" : "Keep on this site";
+    $("keepAll").disabled = !!state.saved;
+    $("keep").textContent = state.saved === "site" || state.saved === true ? "Kept ✓" : "Keep on this site";
+    $("keepAll").textContent = state.saved === "all" ? "Kept everywhere ✓" : "Keep on all sites";
   }
 }
 
@@ -42,14 +45,14 @@ function renderSaved(rules) {
   if (!tab) return;
   var host;
   try { host = new URL(tab.url).hostname; } catch (e) { return; }
-  var mine = (rules || []).filter(function (r) { return r.host === host; });
+  var mine = (rules || []).filter(function (r) { return r.host === host || r.host === "*"; });
   $("savedWrap").hidden = mine.length === 0;
   var ul = $("saved");
   ul.innerHTML = "";
   mine.forEach(function (rule) {
     var li = document.createElement("li");
     var span = document.createElement("span");
-    span.textContent = rule.instruction;
+    span.textContent = (rule.host === "*" ? "[all sites] " : "") + rule.instruction;
     span.title = rule.summary || "";
     var del = document.createElement("button");
     del.textContent = "Remove";
@@ -103,6 +106,9 @@ async function init() {
   });
   $("keep").addEventListener("click", function () {
     chrome.runtime.sendMessage({ type: "save", tabId: tab.id });
+  });
+  $("keepAll").addEventListener("click", function () {
+    chrome.runtime.sendMessage({ type: "save", tabId: tab.id, everywhere: true });
   });
   $("undo").addEventListener("click", function () {
     chrome.storage.session.remove(key);

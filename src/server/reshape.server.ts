@@ -35,6 +35,8 @@ const OP_TYPES = [
   "attribute",
   "click",
   "css",
+  "move",
+  "insert",
 ] as const;
 
 // Strict-compatible schema: every field required, optional values nullable.

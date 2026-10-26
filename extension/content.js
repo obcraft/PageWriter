@@ -13,7 +13,7 @@
     var host = location.hostname;
     var path = location.pathname;
     return rules.filter(function (r) {
-      return r.enabled && r.host === host && (r.path === "/" || path.indexOf(r.path) === 0);
+      return r.enabled && (r.host === "*" || r.host === host) && (r.path === "/" || path.indexOf(r.path) === 0);
     });
   }
 
