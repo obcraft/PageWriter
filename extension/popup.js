@@ -113,7 +113,7 @@ async function init() {
   $("undo").addEventListener("click", function () {
     chrome.storage.session.remove(key);
     chrome.tabs.reload(tab.id);
-    window.close();
+
   });
   $("settingsBtn").addEventListener("click", function () {
     $("settings").hidden = !$("settings").hidden;
@@ -129,3 +129,9 @@ async function init() {
 }
 
 init();
+
+// Side panel stays open across tabs: refresh when the active tab or its page changes.
+chrome.tabs.onActivated.addListener(function () { location.reload(); });
+chrome.tabs.onUpdated.addListener(function (id, info) {
+  if (tab && id === tab.id && info.status === "complete") location.reload();
+});

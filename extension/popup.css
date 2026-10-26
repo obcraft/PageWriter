@@ -14,7 +14,7 @@
 * { box-sizing: border-box; }
 [hidden] { display: none !important; }
 body {
-  width: 380px;
+  width: auto; min-width: 300px;
   margin: 0;
   background: var(--paper);
   color: var(--ink);
