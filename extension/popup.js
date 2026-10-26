@@ -20,6 +20,7 @@ function render(state) {
   $("pick").textContent = state && state.picking ? "Click it on the page… (Esc)" : t ? "⌖ Pick another" : "⌖ Pick element";
   $("instruction").placeholder = t ? "e.g. make this bigger · move this to the bottom · hide these" : "What would you like to change?";
   var busy = state && STATUS_TEXT[state.status];
+  var done = state && state.status === "done";
   $("run").disabled = !!busy || !tab;
   $("pick").disabled = !!busy || !!(state && state.picking) || !tab;
   $("undo").hidden = !done;
@@ -29,7 +30,6 @@ function render(state) {
   $("error").hidden = !(state && state.status === "error");
   if (state && state.status === "error") $("error").textContent = state.error;
 
-  var done = state && state.status === "done";
   var live = state && (state.status === "applying" || done) && state.operations;
   $("result").hidden = !live;
   if (live) {
