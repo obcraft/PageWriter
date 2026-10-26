@@ -52,7 +52,7 @@ function renderGrid(configs, installed) {
     card.appendChild(el("h3", null, c.title));
     if (c.description) card.appendChild(el("p", "desc", c.description));
     card.appendChild(stepsList(c.operations));
-    card.appendChild(el("div", "meta", "by " + c.author_name + " · " + c.installs + " tried"));
+    card.appendChild(el("div", "meta", "by @" + c.author_name + " · " + c.installs + " tried"));
     var row = el("div", "row");
     var btn = el("button", "btn primary", installed.has(c.id) ? "Added ✓" : "Try it");
     btn.disabled = installed.has(c.id);
@@ -117,13 +117,15 @@ async function renderMine() {
   });
 }
 
-function openShare(rule) {
+async function openShare(rule) {
+  var acc = await getAccount();
+  if (!acc) { pendingShare = rule; return openAuth(false); }
   sharing = rule;
+  $("shareAs").textContent = "Shared as @" + acc.username;
   $("shareWhat").textContent = (rule.host === "*" ? "All websites" : bareHost(rule.host)) + " · " + rule.operations.length + " step(s)";
   $("shTitle").value = rule.instruction.slice(0, 80);
   $("shDesc").value = "";
   $("shareErr").hidden = true;
-  chrome.storage.local.get("authorName").then(function (r) { $("shName").value = r.authorName || ""; });
   $("shareDlg").showModal();
 }
 
@@ -132,16 +134,15 @@ $("shareForm").addEventListener("submit", async function (e) {
   if (!sharing) return;
   $("shareSubmit").disabled = true;
   try {
-    var name = $("shName").value.trim();
-    chrome.storage.local.set({ authorName: name });
+    var token = await accessToken();
+    if (!token) { $("shareDlg").close(); pendingShare = sharing; return openAuth(false); }
     var res = await fetch(server + "/api/public/configs", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", Authorization: "Bearer " + token },
       body: JSON.stringify({
         host: sharing.host === "*" ? "*" : bareHost(sharing.host),
         title: $("shTitle").value,
         description: $("shDesc").value,
-        authorName: name,
         instruction: sharing.instruction,
         operations: sharing.operations,
       }),
@@ -164,6 +165,88 @@ $("shareForm").addEventListener("submit", async function (e) {
 });
 $("shareCancel").addEventListener("click", function () { $("shareDlg").close(); });
 
+/* ---------- Account ---------- */
+var pendingShare = null;
+var signupMode = false;
+
+async function getAccount() { return (await chrome.storage.local.get("account")).account || null; }
+
+async function saveSession(d) {
+  var acc = { accessToken: d.accessToken, refreshToken: d.refreshToken, expiresAt: d.expiresAt, username: d.username };
+  await chrome.storage.local.set({ account: acc });
+  renderAccount();
+  return acc;
+}
+
+// Returns a valid access token, refreshing it when it is about to expire.
+async function accessToken() {
+  var acc = await getAccount();
+  if (!acc) return null;
+  if (acc.expiresAt && acc.expiresAt * 1000 - Date.now() > 60000) return acc.accessToken;
+  var res = await fetch(server + "/api/public/auth/refresh", {
+    method: "POST", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ refreshToken: acc.refreshToken }),
+  });
+  if (!res.ok) { await chrome.storage.local.remove("account"); renderAccount(); return null; }
+  return (await saveSession(await res.json())).accessToken;
+}
+
+async function renderAccount() {
+  var acc = await getAccount();
+  $("whoami").hidden = !acc;
+  $("whoami").textContent = acc ? "@" + acc.username : "";
+  $("signInBtn").hidden = !!acc;
+  $("signOutBtn").hidden = !acc;
+}
+
+function setMode(signup) {
+  signupMode = signup;
+  $("authTitle").textContent = signup ? "Create an account" : "Sign in";
+  $("authSubmit").textContent = signup ? "Create account" : "Sign in";
+  $("authSwitch").textContent = signup ? "Have an account? Sign in" : "New here? Create an account";
+  $("usernameWrap").hidden = !signup;
+  $("auUser").required = signup;
+  $("auPass").autocomplete = signup ? "new-password" : "current-password";
+  $("authErr").hidden = true;
+  $("authOk").hidden = true;
+}
+
+function openAuth(signup) { setMode(!!signup); $("authDlg").showModal(); }
+
+$("signInBtn").addEventListener("click", function () { openAuth(false); });
+$("signOutBtn").addEventListener("click", async function () { await chrome.storage.local.remove("account"); renderAccount(); });
+$("authCancel").addEventListener("click", function () { pendingShare = null; $("authDlg").close(); });
+$("authSwitch").addEventListener("click", function (e) { e.preventDefault(); setMode(!signupMode); });
+
+$("authForm").addEventListener("submit", async function (e) {
+  e.preventDefault();
+  $("authSubmit").disabled = true;
+  $("authErr").hidden = true;
+  try {
+    var payload = { email: $("auEmail").value, password: $("auPass").value };
+    if (signupMode) payload.username = $("auUser").value.trim().toLowerCase();
+    var res = await fetch(server + "/api/public/auth/" + (signupMode ? "signup" : "login"), {
+      method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload),
+    });
+    var data = await res.json().catch(function () { return {}; });
+    if (!res.ok) throw new Error(data.error || "Something went wrong.");
+    if (data.needsConfirmation) {
+      setMode(false);
+      $("authOk").textContent = "Check your email to confirm your account, then sign in here.";
+      $("authOk").hidden = false;
+      return;
+    }
+    await saveSession(data);
+    $("authDlg").close();
+    if (pendingShare) { var r = pendingShare; pendingShare = null; openShare(r); }
+  } catch (err) {
+    $("authErr").textContent = String(err.message || err);
+    $("authErr").hidden = false;
+  } finally {
+    $("authSubmit").disabled = false;
+  }
+});
+
 /* ---------- Tabs & init ---------- */
 function show(tab) {
   document.querySelectorAll(".tab").forEach(function (t) { t.classList.toggle("active", t.dataset.tab === tab); });
@@ -182,6 +265,7 @@ document.querySelectorAll(".quick .chip").forEach(function (c) {
 (async function init() {
   var s = await chrome.storage.local.get("serverUrl");
   server = (s.serverUrl || DEFAULT_SERVER).replace(/\/+$/, "");
+  renderAccount();
   var host = params.get("host");
   if (host && !/^(newtab|extensions)$/.test(host)) $("siteFilter").value = bareHost(host);
   var shareId = params.get("share");

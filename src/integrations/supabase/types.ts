@@ -14,6 +14,24 @@ export type Database = {
   }
   public: {
     Tables: {
+      profiles: {
+        Row: {
+          created_at: string
+          id: string
+          username: string
+        }
+        Insert: {
+          created_at?: string
+          id: string
+          username: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          username?: string
+        }
+        Relationships: []
+      }
       shared_configs: {
         Row: {
           author_name: string
@@ -25,6 +43,7 @@ export type Database = {
           instruction: string
           operations: Json
           title: string
+          user_id: string | null
         }
         Insert: {
           author_name?: string
@@ -36,6 +55,7 @@ export type Database = {
           instruction: string
           operations: Json
           title: string
+          user_id?: string | null
         }
         Update: {
           author_name?: string
@@ -47,6 +67,7 @@ export type Database = {
           instruction?: string
           operations?: Json
           title?: string
+          user_id?: string | null
         }
         Relationships: []
       }

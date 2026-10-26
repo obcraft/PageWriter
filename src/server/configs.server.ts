@@ -18,7 +18,6 @@ const CreateSchema = z.object({
     .regex(/^(\*|[a-z0-9.-]+)$/),
   title: z.string().trim().min(2).max(80),
   description: z.string().trim().max(500).default(""),
-  authorName: z.string().trim().max(40).default(""),
   instruction: z.string().trim().min(1).max(2000),
   operations: z.array(OperationSchema).min(1).max(30),
 });
@@ -63,6 +62,9 @@ export async function listConfigs(request: Request) {
 }
 
 export async function createConfig(request: Request) {
+  const { userFromRequest } = await import("./auth.server");
+  const user = await userFromRequest(request);
+  if (!user) return json({ error: "Sign in to share a setup." }, 401);
   const raw = await request.text();
   if (raw.length > 100_000) return json({ error: "That setup is too large to share." }, 413);
   let parsed;
@@ -80,7 +82,8 @@ export async function createConfig(request: Request) {
       host: c.host === "*" ? "*" : normalizeHost(c.host),
       title: c.title,
       description: c.description,
-      author_name: c.authorName || "Anonymous",
+      author_name: user.username,
+      user_id: user.id,
       instruction: c.instruction,
       operations: c.operations as unknown as import("@/integrations/supabase/types").Json,
     })
