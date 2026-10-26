@@ -98,3 +98,6 @@ chrome.runtime.onMessage.addListener(function (msg, _sender, sendResponse) {
 chrome.tabs.onRemoved.addListener(function (tabId) {
   chrome.storage.session.remove("last:" + tabId);
 });
+
+// Open as a docked side panel (like MetaMask) that pushes the page aside.
+chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true }).catch(function () {});
