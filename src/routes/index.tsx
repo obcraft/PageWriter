@@ -102,6 +102,8 @@ const SPELLS = [
   { say: "move the search bar to the bottom", step: "Moved search to the bottom" },
   { say: "hide the promoted stuff", step: "Hid 1 promoted post" },
   { say: "newest posts first", step: "Sorted 4 posts by time" },
+  { say: "make the text bigger", step: "Enlarged the post text" },
+  { say: "add a note: stay focused", step: "Pinned your note at the top" },
 ] as const;
 
 const POSTS = [
@@ -113,6 +115,7 @@ const POSTS = [
 ];
 
 const SEARCH_H = 48;
+const NOTE_H = 44;
 const POST_H = 64;
 const GAP = 10;
 
@@ -161,12 +164,14 @@ function SpellDemo() {
   const searchBottom = spell >= 1;
   const hideAd = spell >= 2;
   const sorted = spell >= 3;
+  const bigger = spell >= 4;
+  const note = spell >= 5;
 
   const layout = useMemo(() => {
     let posts = POSTS.filter((p) => !(hideAd && p.key === "ad"));
     if (sorted) posts = [...posts].sort((a, b) => a.age - b.age);
     const ys: Record<string, number> = {};
-    let y = searchBottom ? 0 : SEARCH_H + GAP;
+    let y = (searchBottom ? 0 : SEARCH_H + GAP) + (note ? NOTE_H + GAP : 0);
     posts.forEach((p) => {
       ys[p.key] = y;
       y += POST_H + GAP;
@@ -174,7 +179,7 @@ function SpellDemo() {
     const searchY = searchBottom ? y : 0;
     const height = y + (searchBottom ? SEARCH_H : -GAP);
     return { ys, searchY, height };
-  }, [searchBottom, hideAd, sorted]);
+  }, [searchBottom, hideAd, sorted, note]);
 
   const page = dark ? "bg-card text-foreground" : "bg-page text-page-foreground";
   const tile = dark ? "bg-secondary border-border" : "bg-background/[0.03] border-page-muted";
@@ -198,6 +203,17 @@ function SpellDemo() {
               <Search className="h-4 w-4 opacity-60" />
               <span className="text-sm opacity-60">Search</span>
             </div>
+            {note && (
+              <div
+                className="absolute inset-x-0 flex items-center gap-2 rounded-2xl border border-gold/50 bg-gold/10 px-4 font-display text-sm italic text-gold transition-all duration-700 ease-[cubic-bezier(.2,.8,.2,1)]"
+                style={{
+                  height: NOTE_H,
+                  transform: `translateY(${searchBottom ? 0 : SEARCH_H + GAP}px)`,
+                }}
+              >
+                <Sparkles className="h-3.5 w-3.5 shrink-0" /> stay focused today — pinned by you
+              </div>
+            )}
             {POSTS.map((p) => {
               const hidden = hideAd && p.key === "ad";
               const y = layout.ys[p.key] ?? layout.ys["a"] ?? 0;
@@ -213,16 +229,16 @@ function SpellDemo() {
                   }}
                 >
                   <div
-                    className={`h-9 w-9 shrink-0 rounded-full ${p.key === "ad" ? "bg-signal/70" : "bg-paper-deep/60"}`}
+                    className={`${bigger ? "h-11 w-11" : "h-9 w-9"} shrink-0 rounded-full ${p.key === "ad" ? "bg-signal/70" : "bg-paper-deep/60"}`}
                   />
                   <div className="min-w-0 flex-1">
                     <div className="flex items-baseline gap-2">
-                      <span className="truncate text-sm font-semibold">{p.name}</span>
+                      <span className={`${bigger ? "text-base" : "text-sm"} font-semibold`}>{p.name}</span>
                       <span className={`label-mono ${sorted ? "text-signal" : "opacity-50"}`}>
                         {p.time}
                       </span>
                     </div>
-                    <p className="truncate text-sm opacity-70">{p.text}</p>
+                    <p className={`${bigger ? "text-base" : "text-sm"} truncate opacity-70`}>{p.text}</p>
                   </div>
                 </div>
               );
