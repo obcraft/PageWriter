@@ -25,6 +25,10 @@
     </section>
 
     <main>
+      <div class="pickrow">
+        <button id="pick" class="btn small" title="Point at something on the page">⌖ Pick element</button>
+        <span id="target" class="target" hidden><span id="targetText"></span><button id="clearTarget" title="Clear">×</button></span>
+      </div>
       <label class="label" for="instruction">What should change on this page?</label>
       <textarea
         id="instruction"

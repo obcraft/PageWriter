@@ -351,5 +351,85 @@
     return r;
   }
 
-  globalThis.Pagewright = { snapshot: snapshot, apply: apply, applyStep: applyStep, parseDate: parseDate };
+  // Build a reasonably stable, unique CSS selector for an element.
+  function cssPath(el) {
+    var parts = [];
+    while (el && el.nodeType === 1 && el !== document.documentElement) {
+      if (el.id && !/\d{3,}/.test(el.id)) { parts.unshift("#" + CSS.escape(el.id)); break; }
+      var part = el.tagName.toLowerCase();
+      var attr = ["data-testid", "data-test-id", "aria-label", "role", "name"].find(function (a) { return el.getAttribute(a); });
+      if (attr) part += "[" + attr + '="' + el.getAttribute(attr).replace(/"/g, '\\"').slice(0, 60) + '"]';
+      else {
+        var cls = Array.prototype.filter.call(el.classList, function (c) { return c.length < 30 && !/\d{3,}|^[a-z]{1,3}-[A-Za-z0-9]{5,}$/.test(c); }).slice(0, 2);
+        if (cls.length) part += "." + cls.map(CSS.escape).join(".");
+      }
+      parts.unshift(part);
+      var sel = parts.join(" ");
+      try { if (document.querySelectorAll(sel).length === 1) return sel; } catch (e) {}
+      el = el.parentElement;
+    }
+    return parts.join(" ");
+  }
+
+  // Let the user point at an element. Resolves with a description or null (Esc).
+  function pick() {
+    return new Promise(function (resolve) {
+      var box = document.createElement("div");
+      box.style.cssText = "position:fixed;pointer-events:none;z-index:2147483647;border:2px solid #ff5a1f;background:rgba(255,90,31,.12);border-radius:3px;transition:all .05s";
+      var tag = document.createElement("div");
+      tag.style.cssText = "position:fixed;pointer-events:none;z-index:2147483647;background:#1a1a1a;color:#fff;font:12px/1.4 system-ui;padding:3px 7px;border-radius:4px;max-width:360px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis";
+      document.documentElement.appendChild(box);
+      document.documentElement.appendChild(tag);
+      var current = null;
+      function show(el) {
+        current = el;
+        var r = el.getBoundingClientRect();
+        box.style.left = r.left + "px"; box.style.top = r.top + "px";
+        box.style.width = r.width + "px"; box.style.height = r.height + "px";
+        tag.textContent = describe(el) + "  ·  scroll ↑↓ = bigger/smaller  ·  Esc = cancel";
+        tag.style.left = Math.max(4, r.left) + "px";
+        tag.style.top = (r.top > 26 ? r.top - 24 : r.bottom + 4) + "px";
+      }
+      var trail = [];
+      function onMove(e) {
+        var el = document.elementFromPoint(e.clientX, e.clientY);
+        if (el && el !== box && el !== tag && el !== current) { trail = []; show(el); }
+      }
+      function onWheel(e) {
+        if (!current) return;
+        e.preventDefault();
+        if (e.deltaY < 0 && current.parentElement && current.parentElement !== document.documentElement) { trail.push(current); show(current.parentElement); }
+        else if (e.deltaY > 0 && trail.length) show(trail.pop());
+      }
+      function stop(e) { e.preventDefault(); e.stopPropagation(); }
+      function finish(result) {
+        document.removeEventListener("mousemove", onMove, true);
+        document.removeEventListener("wheel", onWheel, { capture: true });
+        document.removeEventListener("click", onClick, true);
+        document.removeEventListener("mousedown", stop, true);
+        document.removeEventListener("keydown", onKey, true);
+        box.remove(); tag.remove();
+        resolve(result);
+      }
+      function onClick(e) {
+        stop(e);
+        if (!current) return finish(null);
+        finish({ selector: cssPath(current), label: describe(current), outline: snapshot(current).slice(0, 6000), parent: current.parentElement ? cssPath(current.parentElement) : null });
+      }
+      function onKey(e) { if (e.key === "Escape") { stop(e); finish(null); } }
+      document.addEventListener("mousemove", onMove, true);
+      document.addEventListener("wheel", onWheel, { capture: true, passive: false });
+      document.addEventListener("mousedown", stop, true);
+      document.addEventListener("click", onClick, true);
+      document.addEventListener("keydown", onKey, true);
+    });
+  }
+
+  function describe(el) {
+    var t = (el.getAttribute("aria-label") || el.getAttribute("placeholder") || el.textContent || "").replace(/\s+/g, " ").trim().slice(0, 40);
+    var kind = { input: "input", button: "button", a: "link", img: "image", nav: "navigation", header: "header", footer: "footer", form: "form", aside: "sidebar" }[el.tagName.toLowerCase()] || el.tagName.toLowerCase();
+    return kind + (t ? ' "' + t + '"' : "");
+  }
+
+  globalThis.Pagewright = { snapshot: snapshot, apply: apply, applyStep: applyStep, pick: pick, parseDate: parseDate };
 })();

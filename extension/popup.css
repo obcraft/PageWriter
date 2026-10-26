@@ -97,3 +97,8 @@ kbd { font: 10px var(--mono); opacity: 0.6; }
 .saved li button { border: 0; background: none; color: var(--ink-2); cursor: pointer; font-size: 12px; }
 .saved li button:hover { color: var(--bad); }
 .foot { padding: 10px 14px 12px; font: 10.5px var(--mono); color: var(--ink-2); border-top: 1px solid var(--line); }
+
+.pickrow { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
+.target { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; background: var(--paper-2); border: 1.5px solid var(--signal); border-radius: 999px; padding: 3px 4px 3px 10px; max-width: 100%; }
+.target span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 220px; }
+.target button { border: 0; background: transparent; cursor: pointer; font-size: 14px; line-height: 1; color: var(--ink-2); }

@@ -22,6 +22,15 @@ const RequestSchema = z.object({
   url: z.string().max(2000),
   title: z.string().max(500).default(""),
   dom: z.string().min(1).max(200_000),
+  target: z
+    .object({
+      selector: z.string().max(1000),
+      label: z.string().max(300).default(""),
+      outline: z.string().max(8000).default(""),
+      parent: z.string().max(1000).nullable().default(null),
+    })
+    .nullable()
+    .optional(),
 });
 
 const OP_TYPES = [
@@ -120,7 +129,12 @@ export async function handleReshape(request: Request): Promise<Response> {
     messages: [
       {
         role: "user",
-        content: `Page URL: ${input.url}\nPage title: ${input.title}\n\nUser request: ${input.instruction}\n\nDOM outline:\n${input.dom}`,
+        content:
+          `Page URL: ${input.url}\nPage title: ${input.title}\n\nUser request: ${input.instruction}\n\n` +
+          (input.target
+            ? `The user POINTED AT this element on the page, so words like "this", "it", "here" refer to it and the request most likely targets it (or items like it):\nSelector: ${input.target.selector}\nDescription: ${input.target.label}\nParent selector: ${input.target.parent ?? "none"}\nIts outline:\n${input.target.outline}\n\n`
+            : "") +
+          `DOM outline:\n${input.dom}`,
       },
     ],
     output: Output.object({ schema: PlanSchema }),
