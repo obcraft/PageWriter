@@ -10,6 +10,7 @@
 <!-- LOVABLE:END -->
 
 ## Project rules
+- Extension UI uses shared semantic color/control tokens in `extension/popup.css`, with community layout overrides in `extension/hub.css`; update active-tab state without reloading the panel to preserve drafts and focus.
 - The Chrome extension source lives in `extension/` (Manifest V3, plain JS, no build step); after any change there, re-zip it to `public/pagewright-extension.zip` — the download page serves that file.
 - The extension never runs AI-generated code; the AI returns a small JSON list of DOM operations that `extension/pagewright.js` executes — keeps it CSP-safe on sites like LinkedIn.
 - The AI planning endpoint is `src/routes/api/public/reshape.ts` (public, CORS-open, input size-capped) so the extension can call it from any site; logic lives in `src/server/reshape.server.ts`.
