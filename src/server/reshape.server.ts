@@ -13,7 +13,7 @@ const MODEL = "openai/gpt-6-astra";
 export const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type, Accept, X-Lovable-AIG-Run-ID",
+  "Access-Control-Allow-Headers": "Content-Type, Accept, Authorization, X-Lovable-AIG-Run-ID",
   "Access-Control-Max-Age": "86400",
 } as const;
 
