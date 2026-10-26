@@ -26,7 +26,18 @@ function inTab(tabId, func, args) {
     .then(function (res) { return res && res[0] ? res[0].result : undefined; });
 }
 
+async function pickElement(tabId) {
+  await setState(tabId, { picking: true });
+  try {
+    var picked = await inTab(tabId, function () { return globalThis.Pagewright.pick(); });
+    await setState(tabId, { picking: false, target: picked || null });
+  } catch (e) {
+    await setState(tabId, { picking: false, error: String((e && e.message) || e), status: "error" });
+  }
+}
+
 async function run(tabId, instruction) {
+  var target = ((await chrome.storage.session.get("last:" + tabId))["last:" + tabId] || {}).target || null;
   await setState(tabId, {
     status: "reading", instruction: instruction, summary: null, results: null, operations: null, error: null,
   });
@@ -47,7 +58,7 @@ async function run(tabId, instruction) {
     var res = await fetch(server + "/api/public/reshape", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ instruction: instruction, url: page.url, title: page.title, dom: page.dom }),
+      body: JSON.stringify({ instruction: instruction, url: page.url, title: page.title, dom: page.dom, target: target }),
     });
     var data = await res.json().catch(function () { return {}; });
     if (!res.ok) throw new Error(data.error || "Server error (" + res.status + ")");
@@ -108,6 +119,12 @@ chrome.runtime.onMessage.addListener(function (msg, _sender, sendResponse) {
     sendResponse({ started: true });
   } else if (msg && msg.type === "save") {
     saveRule(msg.tabId, !!msg.everywhere).then(function (ok) { sendResponse({ ok: ok }); });
+    return true;
+  } else if (msg && msg.type === "pick") {
+    pickElement(msg.tabId);
+    sendResponse({ started: true });
+  } else if (msg && msg.type === "clearTarget") {
+    setState(msg.tabId, { target: null }).then(function () { sendResponse({ ok: true }); });
     return true;
   } else if (msg && msg.type === "undo") {
     undo(msg.tabId).then(function () { sendResponse({ ok: true }); });
