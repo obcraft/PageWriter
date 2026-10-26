@@ -22,3 +22,7 @@ body.hub { min-height: 100vh; font-size: 14px; }
 .dlg::backdrop { background: rgba(22, 20, 18, .45); }
 .dlg h2 { margin: 0 0 6px; font-family: Georgia, serif; font-weight: normal; }
 .dlg input, .dlg textarea { width: 100%; border: 1.5px solid var(--ink); border-radius: 10px; padding: 9px 12px; font: inherit; background: #fffdf9; margin-bottom: 10px; }
+
+.account { display: flex; align-items: center; gap: 8px; margin-left: 16px; }
+.account .btn { width: auto; }
+.dlg a { color: var(--signal); }

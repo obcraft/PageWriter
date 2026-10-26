@@ -16,6 +16,11 @@
         <button data-tab="browse" class="tab active">Browse</button>
         <button data-tab="mine" class="tab">My setups</button>
       </nav>
+      <div class="account">
+        <span id="whoami" class="hint" hidden></span>
+        <button id="signInBtn" class="btn small">Sign in</button>
+        <button id="signOutBtn" class="btn small ghost" hidden>Sign out</button>
+      </div>
     </header>
 
     <main class="hubmain">
@@ -49,13 +54,34 @@
         <input id="shTitle" required minlength="2" maxlength="80" placeholder="e.g. Clean Reddit, dark & no ads" />
         <label class="label" for="shDesc">What does it do? (optional)</label>
         <textarea id="shDesc" rows="3" maxlength="500"></textarea>
-        <label class="label" for="shName">Your name (optional)</label>
-        <input id="shName" maxlength="40" placeholder="Anonymous" />
+        <p id="shareAs" class="hint"></p>
         <p id="shareErr" class="error" hidden></p>
         <div class="row">
           <button type="submit" id="shareSubmit" class="btn primary">Share publicly</button>
           <button type="button" id="shareCancel" class="btn ghost">Cancel</button>
         </div>
+      </form>
+    </dialog>
+
+    <dialog id="authDlg" class="dlg">
+      <form id="authForm" method="dialog">
+        <h2 id="authTitle">Sign in</h2>
+        <p class="hint">An account is needed to share setups. Trying setups works without one.</p>
+        <div id="usernameWrap" hidden>
+          <label class="label" for="auUser">Username (shown on what you share)</label>
+          <input id="auUser" maxlength="20" pattern="[a-z0-9_]{3,20}" placeholder="e.g. mila_k" autocomplete="username" />
+        </div>
+        <label class="label" for="auEmail">Email</label>
+        <input id="auEmail" type="email" required autocomplete="email" />
+        <label class="label" for="auPass">Password</label>
+        <input id="auPass" type="password" required minlength="8" autocomplete="current-password" />
+        <p id="authErr" class="error" hidden></p>
+        <p id="authOk" class="hint" hidden></p>
+        <div class="row">
+          <button type="submit" id="authSubmit" class="btn primary">Sign in</button>
+          <button type="button" id="authCancel" class="btn ghost">Cancel</button>
+        </div>
+        <p class="hint"><a href="#" id="authSwitch">New here? Create an account</a></p>
       </form>
     </dialog>
 
