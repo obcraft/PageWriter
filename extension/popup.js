@@ -118,9 +118,7 @@ async function init() {
     chrome.runtime.sendMessage({ type: "save", tabId: tab.id, everywhere: true });
   });
   $("undo").addEventListener("click", function () {
-    chrome.storage.session.remove(key);
-    chrome.tabs.reload(tab.id);
-
+    chrome.runtime.sendMessage({ type: "undo", tabId: tab.id });
   });
   $("settingsBtn").addEventListener("click", function () {
     $("settings").hidden = !$("settings").hidden;
