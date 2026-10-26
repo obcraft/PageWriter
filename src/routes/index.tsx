@@ -115,6 +115,7 @@ const POSTS = [
 ];
 
 const SEARCH_H = 48;
+const NOTE_H = 44;
 const POST_H = 64;
 const GAP = 10;
 
@@ -202,6 +203,17 @@ function SpellDemo() {
               <Search className="h-4 w-4 opacity-60" />
               <span className="text-sm opacity-60">Search</span>
             </div>
+            {note && (
+              <div
+                className="absolute inset-x-0 flex items-center gap-2 rounded-2xl border border-gold/50 bg-gold/10 px-4 font-display text-sm italic text-gold transition-all duration-700 ease-[cubic-bezier(.2,.8,.2,1)]"
+                style={{
+                  height: NOTE_H,
+                  transform: `translateY(${searchBottom ? 0 : SEARCH_H + GAP}px)`,
+                }}
+              >
+                <Sparkles className="h-3.5 w-3.5 shrink-0" /> stay focused today — pinned by you
+              </div>
+            )}
             {POSTS.map((p) => {
               const hidden = hideAd && p.key === "ad";
               const y = layout.ys[p.key] ?? layout.ys["a"] ?? 0;
