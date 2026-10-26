@@ -1,0 +1,16 @@
+<!-- LOVABLE:BEGIN -->
+> [!IMPORTANT]
+> This project is connected to [Lovable](https://lovable.dev). Avoid rewriting
+> published git history — force pushing, or rebasing/amending/squashing commits
+> that are already pushed — as it rewrites history on Lovable's side and the
+> user will likely lose their project history.
+>
+> Commits you push to the connected branch sync back to Lovable and show up in
+> the editor, so keep the branch in a working state.
+<!-- LOVABLE:END -->
+
+## Project rules
+- The Chrome extension source lives in `extension/` (Manifest V3, plain JS, no build step); after any change there, re-zip it to `public/pagewright-extension.zip` — the download page serves that file.
+- The extension never runs AI-generated code; the AI returns a small JSON list of DOM operations that `extension/pagewright.js` executes — keeps it CSP-safe on sites like LinkedIn.
+- The AI planning endpoint is `src/routes/api/public/reshape.ts` (public, CORS-open, input size-capped) so the extension can call it from any site; logic lives in `src/server/reshape.server.ts`.
+- `extension/pagewright.js` is a plain script exposing `globalThis.Pagewright`; its sort/date/filter logic is tested in `src/test/pagewright-ops.test.ts`.

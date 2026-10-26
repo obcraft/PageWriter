@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Pagewright</title>
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <header class="top">
+      <div class="brand">
+        <img src="icons/icon48.png" alt="" width="22" height="22" />
+        <span class="name">Pagewright</span>
+      </div>
+      <span id="host" class="host">—</span>
+      <button id="settingsBtn" class="icon-btn" title="Settings" aria-label="Settings">⚙</button>
+    </header>
+
+    <section id="settings" class="settings" hidden>
+      <label class="label" for="serverUrl">Server address</label>
+      <input id="serverUrl" type="url" spellcheck="false" />
+      <div class="row">
+        <button id="saveSettings" class="btn small">Save</button>
+        <span id="settingsMsg" class="hint"></span>
+      </div>
+    </section>
+
+    <main>
+      <label class="label" for="instruction">What should change on this page?</label>
+      <textarea
+        id="instruction"
+        rows="3"
+        placeholder="e.g. sort the posts in chronological order, newest first"
+      ></textarea>
+      <div class="chips" id="chips">
+        <button class="chip">Sort chronologically, newest first</button>
+        <button class="chip">Hide promoted / sponsored posts</button>
+        <button class="chip">Make text bigger</button>
+        <button class="chip">Dark mode</button>
+      </div>
+      <button id="run" class="btn primary">Change page <kbd>⌘↵</kbd></button>
+
+      <div id="status" class="status" hidden>
+        <span class="dot"></span><span id="statusText"></span>
+      </div>
+
+      <div id="result" class="result" hidden>
+        <p id="summary" class="summary"></p>
+        <ul id="ops" class="ops"></ul>
+        <div class="row">
+          <button id="keep" class="btn">Keep on this site</button>
+          <button id="undo" class="btn ghost">Undo (reload)</button>
+        </div>
+      </div>
+
+      <div id="error" class="error" hidden></div>
+    </main>
+
+    <section id="savedWrap" class="saved" hidden>
+      <div class="label">Kept on this site</div>
+      <ul id="saved"></ul>
+    </section>
+
+    <footer class="foot">Changes only happen in your browser. Reload to undo.</footer>
+    <script src="popup.js"></script>
+  </body>
+</html>
