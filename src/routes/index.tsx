@@ -359,7 +359,7 @@ function Index() {
           <h2 className="mx-auto max-w-2xl text-center font-display text-5xl leading-tight">
             Anything you can say, the page can become.
           </h2>
-          <ul className="mx-auto mt-14 flex max-w-4xl flex-wrap justify-center gap-4">
+          <ul className="mx-auto mt-14 flex max-w-4xl flex-wrap justify-center gap-x-4 gap-y-7">
             {INCANTATIONS.map((x, i) => (
               <li
                 key={x.t}
