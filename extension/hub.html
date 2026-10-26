@@ -2,6 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Pagewright — Community setups</title>
     <link rel="stylesheet" href="popup.css" />
     <link rel="stylesheet" href="hub.css" />
@@ -28,9 +29,9 @@
       <section id="browse">
         <h2 id="browseTitle" class="sectiontitle"></h2>
         <div class="filters">
-          <input id="siteFilter" list="siteList" placeholder="Website, e.g. reddit.com" spellcheck="false" />
+          <input id="siteFilter" aria-label="Search websites" list="siteList" placeholder="Website, e.g. reddit.com" spellcheck="false" />
           <datalist id="siteList"></datalist>
-          <input id="search" placeholder="Search titles, descriptions, makers…" />
+          <input id="search" aria-label="Search setups" placeholder="Search titles, descriptions, makers…" />
           <label class="ctl" id="sortWrap">Sort
             <select id="sort">
               <option value="popular">Most liked</option>
@@ -40,9 +41,9 @@
             </select>
           </label>
           <div class="seg" role="group" aria-label="View">
-            <button data-view="grid" class="active" title="Grid">▦ Grid</button>
-            <button data-view="list" title="List">☰ List</button>
-            <button data-view="compact" title="Compact">≡ Compact</button>
+            <button data-view="grid" class="active" title="Grid" aria-label="Grid view" aria-pressed="true">▦</button>
+            <button data-view="list" title="List" aria-label="List view" aria-pressed="false">☰</button>
+            <button data-view="compact" title="Compact" aria-label="Compact view" aria-pressed="false">≡</button>
           </div>
           <label class="ctl"><input type="checkbox" id="likedOnly" /> Only my likes</label>
           <div class="quick">
@@ -53,12 +54,12 @@
             <button class="chip" data-site="x.com">X</button>
           </div>
         </div>
-        <p id="browseMsg" class="hint"></p>
+        <p id="browseMsg" class="hint" role="status" aria-live="polite"></p>
         <div id="grid" class="grid"></div>
       </section>
 
       <section id="mine" hidden>
-        <p class="hint">Setups you kept. Share one so others can try it on the same website.</p>
+        <h2 class="sectiontitle">My setups</h2>
         <div id="mineGrid" class="grid"></div>
       </section>
     </main>

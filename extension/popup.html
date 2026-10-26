@@ -2,6 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Pagewright</title>
     <link rel="stylesheet" href="popup.css" />
   </head>
@@ -28,23 +29,23 @@
     <main>
       <div class="pickrow">
         <button id="pick" class="btn small" title="Point at something on the page">⌖ Pick element</button>
-        <span id="target" class="target" hidden><span id="targetText"></span><button id="clearTarget" title="Clear">×</button></span>
+        <span id="target" class="target" hidden><span id="targetText"></span><button id="clearTarget" title="Clear selection" aria-label="Clear selection">×</button></span>
       </div>
       <label class="label" for="instruction">What should change on this page?</label>
       <textarea
         id="instruction"
         rows="3"
-        placeholder="e.g. sort the posts in chronological order, newest first"
+        placeholder="What would you like to change?"
       ></textarea>
       <div class="chips" id="chips">
-        <button class="chip">Sort chronologically, newest first</button>
-        <button class="chip">Hide promoted / sponsored posts</button>
-        <button class="chip">Make text bigger</button>
-        <button class="chip">Dark mode</button>
+        <button class="chip" data-instruction="Sort chronologically, newest first">Newest first</button>
+        <button class="chip" data-instruction="Hide promoted / sponsored posts">Hide ads</button>
+        <button class="chip" data-instruction="Make text bigger">Bigger text</button>
+        <button class="chip" data-instruction="Dark mode">Dark mode</button>
       </div>
       <button id="run" class="btn primary">Change page <kbd>⌘↵</kbd></button>
 
-      <div id="status" class="status" hidden>
+      <div id="status" class="status" role="status" aria-live="polite" hidden>
         <span class="dot"></span><span id="statusText"></span>
       </div>
 
@@ -58,7 +59,7 @@
         </div>
       </div>
 
-      <div id="error" class="error" hidden></div>
+      <div id="error" class="error" role="alert" hidden></div>
     </main>
 
     <section id="savedWrap" class="saved" hidden>
@@ -66,7 +67,6 @@
       <ul id="saved"></ul>
     </section>
 
-    <footer class="foot">Changes only happen in your browser. Reload to undo.</footer>
     <script src="popup.js"></script>
   </body>
 </html>

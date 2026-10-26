@@ -1,6 +1,10 @@
 var DEFAULT_SERVER = "https://project--9e9f7a85-4d83-4522-9e31-420744d88dd9.lovable.app";
 var $ = function (id) { return document.getElementById(id); };
 var tab = null;
+var activeKey = null;
+var refreshVersion = 0;
+var drafts = {};
+var currentState = null;
 
 var STATUS_TEXT = {
   reading: "Reading the page…",
@@ -9,20 +13,23 @@ var STATUS_TEXT = {
 };
 
 function render(state) {
+  currentState = state;
   var t = state && state.target;
   $("target").hidden = !t;
   if (t) $("targetText").textContent = "This: " + t.label;
   $("pick").textContent = state && state.picking ? "Click it on the page… (Esc)" : t ? "⌖ Pick another" : "⌖ Pick element";
-  $("instruction").placeholder = t ? "e.g. make this bigger · move this to the bottom · hide these" : "e.g. sort the posts in chronological order, newest first";
+  $("instruction").placeholder = t ? "e.g. make this bigger · move this to the bottom · hide these" : "What would you like to change?";
   var busy = state && STATUS_TEXT[state.status];
-  $("run").disabled = !!busy;
+  var done = state && state.status === "done";
+  $("run").disabled = !!busy || !tab;
+  $("pick").disabled = !!busy || !!(state && state.picking) || !tab;
+  $("undo").hidden = !done;
   $("status").hidden = !busy;
   if (busy) $("statusText").textContent = STATUS_TEXT[state.status];
 
   $("error").hidden = !(state && state.status === "error");
   if (state && state.status === "error") $("error").textContent = state.error;
 
-  var done = state && state.status === "done";
   var live = state && (state.status === "applying" || done) && state.operations;
   $("result").hidden = !live;
   if (live) {
@@ -67,12 +74,16 @@ function renderSaved(rules) {
     span.textContent = (rule.host === "*" ? "[all sites] " : "") + rule.instruction;
     span.title = rule.summary || "";
     var share = document.createElement("button");
-    share.textContent = "Share";
+    share.textContent = "↗";
+    share.title = "Share setup";
+    share.setAttribute("aria-label", "Share setup");
     share.addEventListener("click", function () {
       chrome.tabs.create({ url: chrome.runtime.getURL("hub.html?share=" + rule.id) });
     });
     var del = document.createElement("button");
-    del.textContent = "Remove";
+    del.textContent = "×";
+    del.title = "Remove setup";
+    del.setAttribute("aria-label", "Remove setup");
     del.addEventListener("click", function () {
       var next = rules.filter(function (r) { return r.id !== rule.id; });
       chrome.storage.local.set({ rules: next });
@@ -86,32 +97,40 @@ function renderSaved(rules) {
 
 function run() {
   var instruction = $("instruction").value.trim();
-  if (!instruction || !tab) return;
-  chrome.runtime.sendMessage({ type: "run", tabId: tab.id, instruction: instruction });
+  if (!instruction || !tab || $("run").disabled) return;
+  render(Object.assign({}, currentState, { status: "reading" }));
+  chrome.runtime.sendMessage({ type: "run", tabId: tab.id, instruction: instruction }).catch(function () {
+    render({ status: "error", error: "Couldn’t start the change. Please try again." });
+  });
+}
+
+async function refreshTab() {
+  var version = ++refreshVersion;
+  if (tab) drafts[tab.id] = $("instruction").value;
+  var tabs = await chrome.tabs.query({ active: true, currentWindow: true });
+  if (version !== refreshVersion) return;
+  var next = tabs[0];
+  if (!next) { tab = null; activeKey = null; render(null); return; }
+  var changed = !tab || tab.id !== next.id;
+  tab = next;
+  activeKey = "last:" + tab.id;
+  try { $("host").textContent = new URL(tab.url).hostname || "this page"; } catch (e) { $("host").textContent = "this page"; }
+  if (changed) { render(null); $("instruction").value = drafts[tab.id] || ""; }
+  var session = await chrome.storage.session.get(activeKey);
+  var local = await chrome.storage.local.get(["rules", "serverUrl"]);
+  if (version !== refreshVersion) return;
+  var last = session[activeKey];
+  if (changed && !Object.prototype.hasOwnProperty.call(drafts, tab.id) && last && last.instruction) $("instruction").value = last.instruction;
+  render(last || null);
+  renderSaved(local.rules);
+  if (document.activeElement !== $("serverUrl")) $("serverUrl").value = local.serverUrl || DEFAULT_SERVER;
 }
 
 async function init() {
-  var tabs = await chrome.tabs.query({ active: true, currentWindow: true });
-  tab = tabs[0];
-  try { $("host").textContent = new URL(tab.url).hostname || "this page"; } catch (e) {}
-
-  var key = "last:" + tab.id;
-  var session = await chrome.storage.session.get(key);
-  var last = session[key];
-  if (last) {
-    if (last.instruction) $("instruction").value = last.instruction;
-    render(last);
-  }
-
-  var local = await chrome.storage.local.get(["rules", "serverUrl"]);
-  renderSaved(local.rules);
-  $("serverUrl").value = local.serverUrl || DEFAULT_SERVER;
-
   chrome.storage.onChanged.addListener(function (changes, area) {
-    if (area === "session" && changes[key]) render(changes[key].newValue);
+    if (area === "session" && activeKey && changes[activeKey]) render(changes[activeKey].newValue);
     if (area === "local" && changes.rules) renderSaved(changes.rules.newValue);
   });
-
   $("run").addEventListener("click", run);
   $("hubBtn").addEventListener("click", function () {
     var h = ""; try { h = new URL(tab.url).hostname; } catch (e) {}
@@ -124,7 +143,7 @@ async function init() {
   });
   document.querySelectorAll(".chip").forEach(function (chip) {
     chip.addEventListener("click", function () {
-      $("instruction").value = chip.textContent;
+      $("instruction").value = chip.dataset.instruction || chip.textContent;
       $("instruction").focus();
     });
   });
@@ -147,13 +166,14 @@ async function init() {
       setTimeout(function () { $("settingsMsg").textContent = ""; }, 1500);
     });
   });
+  await refreshTab();
   $("instruction").focus();
 }
 
 init();
 
 // Side panel stays open across tabs: refresh when the active tab or its page changes.
-chrome.tabs.onActivated.addListener(function () { location.reload(); });
+chrome.tabs.onActivated.addListener(function () { refreshTab(); });
 chrome.tabs.onUpdated.addListener(function (id, info) {
-  if (tab && id === tab.id && info.status === "complete") location.reload();
+  if (tab && id === tab.id && info.status === "complete") refreshTab();
 });

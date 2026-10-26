@@ -28,8 +28,16 @@ var timer;
 var currentTab = "popular";
 var view = "grid";
 var lastConfigs = [];
+var loadVersion = 0;
+var drawVersion = 0;
+var loadController = null;
 
 async function load() {
+  var version = ++loadVersion;
+  if (loadController) loadController.abort();
+  var controller = new AbortController();
+  loadController = controller;
+  $("grid").setAttribute("aria-busy", "true");
   var popular = currentTab === "popular";
   var site = bareHost($("siteFilter").value.trim());
   var q = $("search").value.trim();
@@ -37,15 +45,19 @@ async function load() {
   $("sortWrap").hidden = popular;
   $("browseTitle").textContent = popular ? "Most liked setups" + (site ? " for " + site : "") : "Browse all setups";
   $("browseMsg").textContent = "Loading…";
+  document.querySelectorAll(".quick .chip").forEach(function (b) { b.classList.toggle("active", b.dataset.site === site); });
   try {
     var p = { sort: sort, limit: popular ? "30" : "100" };
     if (site) p.host = site;
     if (q) p.q = q;
     var token = await accessToken().catch(function () { return null; });
+    if (version !== loadVersion) return;
     var res = await fetch(server + "/api/public/configs?" + new URLSearchParams(p), {
+      signal: controller.signal,
       headers: token ? { Authorization: "Bearer " + token } : {},
     });
     var data = await res.json();
+    if (version !== loadVersion) return;
     if (!res.ok) throw new Error(data.error || "Couldn't load.");
     lastConfigs = data.configs || [];
     var sites = {};
@@ -54,15 +66,19 @@ async function load() {
     Object.keys(sites).sort().forEach(function (h) { var o = el("option"); o.value = h; $("siteList").appendChild(o); });
     await draw();
   } catch (e) {
-    $("grid").innerHTML = "";
-    $("browseMsg").textContent = "Couldn't reach the Pagewright server.";
+    if (version !== loadVersion || e.name === "AbortError") return;
+    $("browseMsg").textContent = "Couldn’t load setups. Change a filter to try again.";
+  } finally {
+    if (version === loadVersion) $("grid").setAttribute("aria-busy", "false");
   }
 }
 
 async function draw() {
+  var version = ++drawVersion;
   var list = lastConfigs;
   if ($("likedOnly").checked) list = list.filter(function (c) { return c.liked; });
   var installed = new Set((await getRules()).map(function (r) { return r.sharedId; }).filter(Boolean));
+  if (version !== drawVersion) return;
   renderGrid(list, installed);
   var site = bareHost($("siteFilter").value.trim());
   $("browseMsg").textContent = list.length
@@ -73,13 +89,15 @@ async function draw() {
 function setView(v) {
   view = v;
   chrome.storage.local.set({ hubView: v });
-  document.querySelectorAll(".seg button").forEach(function (b) { b.classList.toggle("active", b.dataset.view === v); });
+  document.querySelectorAll(".seg button").forEach(function (b) { b.classList.toggle("active", b.dataset.view === v); b.setAttribute("aria-pressed", String(b.dataset.view === v)); });
   $("grid").className = "grid " + (v === "grid" ? "" : v);
 }
 
 function likeButton(c) {
   var b = el("button", "like" + (c.liked ? " on" : ""), (c.liked ? "♥ " : "♡ ") + (c.likes || 0));
   b.title = c.liked ? "Unlike" : "Like";
+  b.setAttribute("aria-label", b.title + " " + c.title);
+  b.setAttribute("aria-pressed", String(!!c.liked));
   b.addEventListener("click", async function () {
     var token = await accessToken();
     if (!token) return openAuth(false);
@@ -93,17 +111,26 @@ function likeButton(c) {
       c.liked = d.liked; c.likes = d.likes;
       b.className = "like" + (c.liked ? " on" : "");
       b.textContent = (c.liked ? "♥ " : "♡ ") + c.likes;
+      b.title = c.liked ? "Unlike" : "Like";
+      b.setAttribute("aria-label", b.title + " " + c.title);
+      b.setAttribute("aria-pressed", String(!!c.liked));
       if ($("likedOnly").checked) draw();
-    } catch (e) {} finally { b.disabled = false; }
+    } catch (e) { $("browseMsg").textContent = "Couldn’t save your like. Please try again."; } finally { b.disabled = false; }
   });
   return b;
 }
 
 function renderGrid(configs, installed) {
   var grid = $("grid");
+  var focused = document.activeElement;
+  var focusCard = focused && focused.closest("[data-config-id]");
+  var focusId = focusCard && focusCard.dataset.configId;
+  var focusIndex = focusCard ? Array.from(focusCard.querySelectorAll("button")).indexOf(focused) : -1;
   grid.innerHTML = "";
+  var fragment = document.createDocumentFragment();
   configs.forEach(function (c, i) {
     var card = el("article", "card");
+    card.dataset.configId = c.id;
     var body = el("div", "body");
     var top = el("div", "top");
     var left = el("div");
@@ -128,8 +155,14 @@ function renderGrid(configs, installed) {
       row.appendChild(open);
     }
     card.appendChild(row);
-    grid.appendChild(card);
+    fragment.appendChild(card);
   });
+  grid.appendChild(fragment);
+  if (focusId && focusIndex >= 0) {
+    var replacement = Array.from(grid.children).find(function (card) { return card.dataset.configId === focusId; });
+    var button = replacement && replacement.querySelectorAll("button")[focusIndex];
+    if (button) button.focus({ preventScroll: true });
+  }
 }
 
 async function tryConfig(c, btn) {
@@ -256,7 +289,7 @@ async function accessToken() {
 }
 
 async function renderAccount() {
-  if (lastConfigs.length && !$("browse").hidden) setTimeout(load, 0);
+
   var acc = await getAccount();
   $("whoami").hidden = !acc;
   $("whoami").textContent = acc ? "@" + acc.username : "";
@@ -279,7 +312,7 @@ function setMode(signup) {
 function openAuth(signup) { setMode(!!signup); $("authDlg").showModal(); }
 
 $("signInBtn").addEventListener("click", function () { openAuth(false); });
-$("signOutBtn").addEventListener("click", async function () { await chrome.storage.local.remove("account"); renderAccount(); });
+$("signOutBtn").addEventListener("click", async function () { await chrome.storage.local.remove("account"); await renderAccount(); if (!$("browse").hidden) load(); });
 $("authCancel").addEventListener("click", function () { pendingShare = null; $("authDlg").close(); });
 $("authSwitch").addEventListener("click", function (e) { e.preventDefault(); setMode(!signupMode); });
 
@@ -303,6 +336,7 @@ $("authForm").addEventListener("submit", async function (e) {
     }
     await saveSession(data);
     $("authDlg").close();
+    if (!$("browse").hidden) load();
     if (pendingShare) { var r = pendingShare; pendingShare = null; openShare(r); }
   } catch (err) {
     $("authErr").textContent = String(err.message || err);
@@ -315,6 +349,8 @@ $("authForm").addEventListener("submit", async function (e) {
 /* ---------- Tabs & init ---------- */
 function show(tab) {
   currentTab = tab;
+  clearTimeout(timer);
+  if (tab === "mine") { ++loadVersion; ++drawVersion; if (loadController) loadController.abort(); $("grid").setAttribute("aria-busy", "false"); }
   document.querySelectorAll(".tab").forEach(function (t) { t.classList.toggle("active", t.dataset.tab === tab); });
   $("browse").hidden = tab === "mine";
   $("mine").hidden = tab !== "mine";
