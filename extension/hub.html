@@ -29,10 +29,21 @@
       <section id="browse">
         <h2 id="browseTitle" class="sectiontitle"></h2>
         <div class="filters">
-          <input id="siteFilter" aria-label="Search websites" list="siteList" placeholder="Website, e.g. reddit.com" spellcheck="false" />
+          <input
+            id="siteFilter"
+            aria-label="Search websites"
+            list="siteList"
+            placeholder="Website, e.g. reddit.com"
+            spellcheck="false"
+          />
           <datalist id="siteList"></datalist>
-          <input id="search" aria-label="Search setups" placeholder="Search titles, descriptions, makers…" />
-          <label class="ctl" id="sortWrap">Sort
+          <input
+            id="search"
+            aria-label="Search setups"
+            placeholder="Search titles, descriptions, makers…"
+          />
+          <label class="ctl" id="sortWrap"
+            >Sort
             <select id="sort">
               <option value="popular">Most liked</option>
               <option value="newest">Newest</option>
@@ -41,9 +52,26 @@
             </select>
           </label>
           <div class="seg" role="group" aria-label="View">
-            <button data-view="grid" class="active" title="Grid" aria-label="Grid view" aria-pressed="true">▦</button>
-            <button data-view="list" title="List" aria-label="List view" aria-pressed="false">☰</button>
-            <button data-view="compact" title="Compact" aria-label="Compact view" aria-pressed="false">≡</button>
+            <button
+              data-view="grid"
+              class="active"
+              title="Grid"
+              aria-label="Grid view"
+              aria-pressed="true"
+            >
+              ▦
+            </button>
+            <button data-view="list" title="List" aria-label="List view" aria-pressed="false">
+              ☰
+            </button>
+            <button
+              data-view="compact"
+              title="Compact"
+              aria-label="Compact view"
+              aria-pressed="false"
+            >
+              ≡
+            </button>
           </div>
           <label class="ctl"><input type="checkbox" id="likedOnly" /> Only my likes</label>
           <div class="quick">
@@ -69,7 +97,13 @@
         <h2>Share this setup</h2>
         <p id="shareWhat" class="hint"></p>
         <label class="label" for="shTitle">Title</label>
-        <input id="shTitle" required minlength="2" maxlength="80" placeholder="e.g. Clean Reddit, dark & no ads" />
+        <input
+          id="shTitle"
+          required
+          minlength="2"
+          maxlength="80"
+          placeholder="e.g. Clean Reddit, dark & no ads"
+        />
         <label class="label" for="shDesc">What does it do? (optional)</label>
         <textarea id="shDesc" rows="3" maxlength="500"></textarea>
         <p id="shareAs" class="hint"></p>
@@ -84,10 +118,19 @@
     <dialog id="authDlg" class="dlg">
       <form id="authForm" method="dialog">
         <h2 id="authTitle">Sign in</h2>
-        <p class="hint">An account is needed to share setups. Trying setups works without one.</p>
+        <p class="hint">
+          Sign in to save encrypted API keys and share setups. Trying saved community setups works
+          without an account.
+        </p>
         <div id="usernameWrap" hidden>
           <label class="label" for="auUser">Username (shown on what you share)</label>
-          <input id="auUser" maxlength="20" pattern="[a-z0-9_]{3,20}" placeholder="e.g. mila_k" autocomplete="username" />
+          <input
+            id="auUser"
+            maxlength="20"
+            pattern="[a-z0-9_]{3,20}"
+            placeholder="e.g. mila_k"
+            autocomplete="username"
+          />
         </div>
         <label class="label" for="auEmail">Email</label>
         <input id="auEmail" type="email" required autocomplete="email" />
@@ -103,6 +146,7 @@
       </form>
     </dialog>
 
+    <script src="config.js"></script>
     <script src="hub.js"></script>
   </body>
 </html>

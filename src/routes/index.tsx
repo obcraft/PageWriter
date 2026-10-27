@@ -17,7 +17,8 @@ export const Route = createFileRoute("/")({
       { property: "og:title", content: "Pagewright — rewrite any website to your liking" },
       {
         property: "og:description",
-        content: "Point at a page, say what you want, watch it rearrange itself. Then share your spell.",
+        content:
+          "Point at a page, say what you want, watch it rearrange itself. Then share your spell.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -29,7 +30,7 @@ export const Route = createFileRoute("/")({
 const ZIP = "/pagewright-extension.zip";
 
 function download() {
-  fetch(ZIP)
+  fetch(ZIP, { cache: "no-store" })
     .then((res) => {
       if (!res.ok) throw new Error(`Download failed: ${res.status}`);
       return res.blob();
@@ -110,7 +111,13 @@ const POSTS = [
   { key: "a", name: "Jan de Vries", time: "3d", text: "Our Q3 results are finally in…", age: 72 },
   { key: "ad", name: "Promoted", time: "", text: "Grow your network 10× overnight!", age: -1 },
   { key: "b", name: "Sara Bakker", time: "5h", text: "Hiring two designers in Amsterdam.", age: 5 },
-  { key: "c", name: "Pieter Smit", time: "20m", text: "Notes from today's product review.", age: 0.3 },
+  {
+    key: "c",
+    name: "Pieter Smit",
+    time: "20m",
+    text: "Notes from today's product review.",
+    age: 0.3,
+  },
   { key: "d", name: "Noor Jansen", time: "1d", text: "A tiny thread on kerning.", age: 24 },
 ];
 
@@ -233,12 +240,16 @@ function SpellDemo() {
                   />
                   <div className="min-w-0 flex-1">
                     <div className="flex items-baseline gap-2">
-                      <span className={`${bigger ? "text-base" : "text-sm"} font-semibold`}>{p.name}</span>
+                      <span className={`${bigger ? "text-base" : "text-sm"} font-semibold`}>
+                        {p.name}
+                      </span>
                       <span className={`label-mono ${sorted ? "text-signal" : "opacity-50"}`}>
                         {p.time}
                       </span>
                     </div>
-                    <p className={`${bigger ? "text-base" : "text-sm"} truncate opacity-70`}>{p.text}</p>
+                    <p className={`${bigger ? "text-base" : "text-sm"} truncate opacity-70`}>
+                      {p.text}
+                    </p>
                   </div>
                 </div>
               );
@@ -318,6 +329,7 @@ const STEPS = [
   "Open chrome://extensions in Chrome, Edge, Brave or Arc.",
   "Switch on Developer mode, top right.",
   "Click Load unpacked and choose the unzipped folder.",
+  "Open Pagewright, sign in, and save your API key with a provider and model.",
 ];
 
 function Index() {
@@ -378,7 +390,9 @@ function Index() {
               <li
                 key={x.t}
                 className="animate-float rounded-2xl border border-border bg-card px-5 py-3 font-display text-xl italic transition-colors hover:border-gold hover:text-gold"
-                style={{ "--r": `${x.r}deg`, animationDelay: `${i * -0.7}s` } as React.CSSProperties}
+                style={
+                  { "--r": `${x.r}deg`, animationDelay: `${i * -0.7}s` } as React.CSSProperties
+                }
               >
                 “{x.t}”
               </li>
@@ -389,7 +403,9 @@ function Index() {
         {/* Community */}
         <section className="grid items-center gap-12 border-t border-border py-20 lg:grid-cols-[1fr_1.2fr]">
           <div>
-            <h2 className="font-display text-4xl leading-tight sm:text-5xl">Borrow someone else's magic.</h2>
+            <h2 className="font-display text-4xl leading-tight sm:text-5xl">
+              Borrow someone else's magic.
+            </h2>
             <p className="mt-5 max-w-md text-muted-foreground">
               Made Reddit calm or LinkedIn bearable? Share your setup. Others find it by website and
               try it in one click — no prompt needed.
@@ -421,7 +437,9 @@ function Index() {
         <section className="border-t border-border py-20">
           <div className="grid gap-12 md:grid-cols-[1fr_1.4fr]">
             <div>
-              <h2 className="font-display text-4xl leading-tight sm:text-5xl">Install in a minute.</h2>
+              <h2 className="font-display text-4xl leading-tight sm:text-5xl">
+                Install in a minute.
+              </h2>
               <Button variant="hero" size="lg" className="mt-8" onClick={download}>
                 <ArrowDownToLine /> Download
               </Button>

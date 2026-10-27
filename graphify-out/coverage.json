@@ -1,0 +1,23 @@
+{
+  "detected_files": 113,
+  "detected_words": 31448,
+  "skipped_sensitive": [
+    "/Users/olivier/Documents/PageWriter/.env"
+  ],
+  "ast_failed_sources": [
+    "/Users/olivier/Documents/PageWriter/drizzle/migrations/0000_migration.sql",
+    "/Users/olivier/Documents/PageWriter/drizzle/migrations/0001_migration.sql",
+    "/Users/olivier/Documents/PageWriter/drizzle/migrations/0002_migration.sql"
+  ],
+  "code_files_without_nodes": [
+    "/Users/olivier/Documents/PageWriter/.lovable/project.json",
+    "/Users/olivier/Documents/PageWriter/drizzle/migrations/0000_migration.sql",
+    "/Users/olivier/Documents/PageWriter/drizzle/migrations/0001_migration.sql",
+    "/Users/olivier/Documents/PageWriter/drizzle/migrations/0002_migration.sql",
+    "/Users/olivier/Documents/PageWriter/drizzle/migrations/meta/0000_snapshot.json",
+    "/Users/olivier/Documents/PageWriter/drizzle/migrations/meta/0001_snapshot.json",
+    "/Users/olivier/Documents/PageWriter/drizzle/migrations/meta/0002_snapshot.json",
+    "/Users/olivier/Documents/PageWriter/drizzle/migrations/meta/_journal.json"
+  ],
+  "semantic_token_usage_status": "unavailable: collaboration tools do not expose measured usage; zero token fields are placeholders, not free execution"
+}

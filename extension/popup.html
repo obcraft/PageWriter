@@ -13,32 +13,83 @@
         <span class="name">Pagewright</span>
       </div>
       <span id="host" class="host">—</span>
-      <button id="hubBtn" class="icon-btn" title="Community setups (full screen)" aria-label="Open community">⤢</button>
+      <button
+        id="hubBtn"
+        class="icon-btn"
+        title="Community setups (full screen)"
+        aria-label="Open community"
+      >
+        ⤢
+      </button>
       <button id="settingsBtn" class="icon-btn" title="Settings" aria-label="Settings">⚙</button>
     </header>
 
     <section id="settings" class="settings" hidden>
-      <label class="label" for="serverUrl">Server address</label>
-      <input id="serverUrl" type="url" spellcheck="false" />
-      <div class="row">
-        <button id="saveSettings" class="btn small">Save</button>
-        <span id="settingsMsg" class="hint"></span>
-      </div>
+      <h1 id="settingsTitle">Sign in to get started</h1>
+      <p id="settingsIntro" class="hint">
+        First sign in or create an account. Then choose your AI provider and save your API key
+        securely to your account.
+      </p>
+      <p id="accountStatus" class="hint">Sign in to save your API key securely on your account.</p>
+      <button id="signInForAI" type="button" class="btn small">Sign in / create account</button>
+      <form id="settingsForm" hidden>
+        <label class="label" for="aiProvider">AI provider</label>
+        <select id="aiProvider" required>
+          <option value="">Choose a provider</option>
+          <option value="openrouter">OpenRouter</option>
+          <option value="anthropic">Anthropic</option>
+          <option value="openai">OpenAI</option>
+        </select>
+        <label class="label" for="apiKey">API key</label>
+        <input
+          id="apiKey"
+          type="password"
+          autocomplete="off"
+          spellcheck="false"
+          autocapitalize="off"
+          placeholder="Paste your provider API key"
+          required
+          maxlength="4096"
+          aria-describedby="keyPrivacy"
+          disabled
+        />
+        <p id="keyPrivacy" class="hint">
+          Your key is encrypted and saved to your account in Supabase. It is decrypted only by the
+          Pagewright server when calling your selected provider. This browser remembers your account
+          and model without storing the plaintext key.
+        </p>
+        <label class="label" for="aiModel">Model</label>
+        <select id="aiModel" required aria-describedby="modelHelp" disabled>
+          <option value="">Choose a provider first</option>
+        </select>
+        <p id="modelHelp" class="hint">Models are shown for the selected provider.</p>
+        <div class="row">
+          <button id="saveSettings" type="submit" class="btn" disabled>Save and continue</button>
+          <button id="removeKey" type="button" class="btn ghost" hidden>Remove key</button>
+        </div>
+      </form>
+      <p id="serverStatus" class="hint"></p>
+      <p id="settingsMsg" class="hint" role="status" aria-live="polite"></p>
     </section>
 
-    <main>
+    <main id="editor" hidden>
       <div class="pickrow">
-        <button id="pick" class="btn small" title="Point at something on the page">⌖ Pick element</button>
-        <span id="target" class="target" hidden><span id="targetText"></span><button id="clearTarget" title="Clear selection" aria-label="Clear selection">×</button></span>
+        <button id="pick" class="btn small" title="Point at something on the page">
+          ⌖ Pick element
+        </button>
+        <span id="target" class="target" hidden
+          ><span id="targetText"></span
+          ><button id="clearTarget" title="Clear selection" aria-label="Clear selection">
+            ×
+          </button></span
+        >
       </div>
       <label class="label" for="instruction">What should change on this page?</label>
-      <textarea
-        id="instruction"
-        rows="3"
-        placeholder="What would you like to change?"
-      ></textarea>
+      <textarea id="instruction" rows="3" placeholder="What would you like to change?"></textarea>
       <div class="chips" id="chips">
-        <button class="chip" data-instruction="Sort chronologically, newest first">Newest first</button>
+        <button class="chip" data-instruction="Sort chronologically, newest first">
+          Newest first
+        </button>
         <button class="chip" data-instruction="Hide promoted / sponsored posts">Hide ads</button>
         <button class="chip" data-instruction="Make text bigger">Bigger text</button>
         <button class="chip" data-instruction="Dark mode">Dark mode</button>
@@ -67,6 +118,7 @@
       <ul id="saved"></ul>
     </section>
 
+    <script src="config.js"></script>
     <script src="popup.js"></script>
   </body>
 </html>

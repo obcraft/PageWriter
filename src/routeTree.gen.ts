@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ApiPublicConfigsRouteImport } from './routes/api/public/configs'
+import { Route as ApiPublicCredentialsRouteImport } from './routes/api/public/credentials'
 import { Route as ApiPublicReshapeRouteImport } from './routes/api/public/reshape'
 import { Route as ApiPublicAuthActionRouteImport } from './routes/api/public/auth.$action'
 import { Route as ApiPublicConfigsIdInstallRouteImport } from './routes/api/public/configs.$id.install'
@@ -24,6 +25,11 @@ const IndexRoute = IndexRouteImport.update({
 const ApiPublicConfigsRoute = ApiPublicConfigsRouteImport.update({
   id: '/api/public/configs',
   path: '/api/public/configs',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicCredentialsRoute = ApiPublicCredentialsRouteImport.update({
+  id: '/api/public/credentials',
+  path: '/api/public/credentials',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiPublicReshapeRoute = ApiPublicReshapeRouteImport.update({
@@ -51,6 +57,7 @@ const ApiPublicConfigsIdLikeRoute = ApiPublicConfigsIdLikeRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/api/public/configs': typeof ApiPublicConfigsRouteWithChildren
+  '/api/public/credentials': typeof ApiPublicCredentialsRoute
   '/api/public/reshape': typeof ApiPublicReshapeRoute
   '/api/public/auth/$action': typeof ApiPublicAuthActionRoute
   '/api/public/configs/$id/install': typeof ApiPublicConfigsIdInstallRoute
@@ -59,6 +66,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/api/public/configs': typeof ApiPublicConfigsRouteWithChildren
+  '/api/public/credentials': typeof ApiPublicCredentialsRoute
   '/api/public/reshape': typeof ApiPublicReshapeRoute
   '/api/public/auth/$action': typeof ApiPublicAuthActionRoute
   '/api/public/configs/$id/install': typeof ApiPublicConfigsIdInstallRoute
@@ -68,6 +76,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/api/public/configs': typeof ApiPublicConfigsRouteWithChildren
+  '/api/public/credentials': typeof ApiPublicCredentialsRoute
   '/api/public/reshape': typeof ApiPublicReshapeRoute
   '/api/public/auth/$action': typeof ApiPublicAuthActionRoute
   '/api/public/configs/$id/install': typeof ApiPublicConfigsIdInstallRoute
@@ -78,6 +87,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/api/public/configs'
+    | '/api/public/credentials'
     | '/api/public/reshape'
     | '/api/public/auth/$action'
     | '/api/public/configs/$id/install'
@@ -86,6 +96,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/api/public/configs'
+    | '/api/public/credentials'
     | '/api/public/reshape'
     | '/api/public/auth/$action'
     | '/api/public/configs/$id/install'
@@ -94,6 +105,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/api/public/configs'
+    | '/api/public/credentials'
     | '/api/public/reshape'
     | '/api/public/auth/$action'
     | '/api/public/configs/$id/install'
@@ -103,6 +115,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ApiPublicConfigsRoute: typeof ApiPublicConfigsRouteWithChildren
+  ApiPublicCredentialsRoute: typeof ApiPublicCredentialsRoute
   ApiPublicReshapeRoute: typeof ApiPublicReshapeRoute
   ApiPublicAuthActionRoute: typeof ApiPublicAuthActionRoute
 }
@@ -121,6 +134,13 @@ declare module '@tanstack/react-router' {
       path: '/api/public/configs'
       fullPath: '/api/public/configs'
       preLoaderRoute: typeof ApiPublicConfigsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/credentials': {
+      id: '/api/public/credentials'
+      path: '/api/public/credentials'
+      fullPath: '/api/public/credentials'
+      preLoaderRoute: typeof ApiPublicCredentialsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/public/reshape': {
@@ -170,6 +190,7 @@ const ApiPublicConfigsRouteWithChildren =
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ApiPublicConfigsRoute: ApiPublicConfigsRouteWithChildren,
+  ApiPublicCredentialsRoute: ApiPublicCredentialsRoute,
   ApiPublicReshapeRoute: ApiPublicReshapeRoute,
   ApiPublicAuthActionRoute: ApiPublicAuthActionRoute,
 }

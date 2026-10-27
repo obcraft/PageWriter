@@ -1,0 +1,33 @@
+app = "pagewright-backend"
+primary_region = "ams"
+
+[build]
+  dockerfile = "Dockerfile"
+
+[env]
+  NODE_ENV = "production"
+  HOST = "::"
+  PORT = "8080"
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = "stop"
+  auto_start_machines = true
+  min_machines_running = 1
+
+  [[http_service.checks]]
+    grace_period = "15s"
+    interval = "30s"
+    timeout = "5s"
+    method = "GET"
+    path = "/api/public/reshape"
+
+[[vm]]
+  cpu_kind = "shared"
+  cpus = 1
+  memory = "512mb"
+
+[build.args]
+  VITE_SUPABASE_URL = "https://qcjovvehgbomcyglbovu.supabase.co"
+  VITE_SUPABASE_PUBLISHABLE_KEY = "sb_publishable_BYG1ayPsw2NStKSs-tQhUA_7ZF1IO1u"

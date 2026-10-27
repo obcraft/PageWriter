@@ -1,0 +1,206 @@
+{
+  "node_count": 808,
+  "unverified_node_count": 0,
+  "raw_edge_count": 1533,
+  "non_object_edges": 0,
+  "missing_endpoint_edges": 0,
+  "dangling_endpoint_edges": 6,
+  "external_reference_edges": 5,
+  "self_loop_edges": 5,
+  "valid_candidate_edges": 1522,
+  "exact_duplicate_edges": 0,
+  "directed_unique_endpoint_pairs": 1476,
+  "directed_same_endpoint_collapsed_edges": 46,
+  "undirected_unique_endpoint_pairs": 1473,
+  "undirected_same_endpoint_collapsed_edges": 49,
+  "same_endpoint_group_count": 46,
+  "relation_variant_groups": 41,
+  "source_file_variant_groups": 0,
+  "source_location_variant_groups": 5,
+  "context_variant_groups": 0,
+  "post_build_graph_type": "Graph",
+  "post_build_node_count": 819,
+  "post_build_edge_count": 1484,
+  "post_build_error": "",
+  "producer_suppression": {
+    "path": "/Users/olivier/.local/share/uv/tools/graphifyy/lib/python3.14/site-packages/graphify/extract.py",
+    "total_sites": 12,
+    "sites": [
+      {
+        "line": 1789,
+        "name": "seen_ids",
+        "tuple_arity": 0,
+        "sample": "seen_ids = {n[\"id\"] for n in nodes}"
+      },
+      {
+        "line": 2353,
+        "name": "seen_ids",
+        "tuple_arity": 0,
+        "sample": "seen_ids = {n[\"id\"] for n in nodes}"
+      },
+      {
+        "line": 2355,
+        "name": "seen_doc_refs",
+        "tuple_arity": 0,
+        "sample": "seen_doc_refs: set[str] = set()"
+      },
+      {
+        "line": 3022,
+        "name": "seen_ids",
+        "tuple_arity": 0,
+        "sample": "seen_ids: set[str] = {n[\"id\"] for n in nodes}"
+      },
+      {
+        "line": 3169,
+        "name": "seen_ids",
+        "tuple_arity": 0,
+        "sample": "seen_ids = {n.get(\"id\") for n in nodes}"
+      },
+      {
+        "line": 4179,
+        "name": "seen_keys",
+        "tuple_arity": 0,
+        "sample": "seen_keys: set[tuple] = set()"
+      },
+      {
+        "line": 4365,
+        "name": "seen_keys",
+        "tuple_arity": 0,
+        "sample": "seen_keys: set[tuple] = set()"
+      },
+      {
+        "line": 7608,
+        "name": "seen_ids",
+        "tuple_arity": 0,
+        "sample": "seen_ids: set[str] = set()"
+      },
+      {
+        "line": 7716,
+        "name": "seen_ids",
+        "tuple_arity": 0,
+        "sample": "seen_ids: set[str] = set()"
+      },
+      {
+        "line": 7795,
+        "name": "seen_ids",
+        "tuple_arity": 0,
+        "sample": "seen_ids: set[str] = set()"
+      },
+      {
+        "line": 8310,
+        "name": "seen_ids",
+        "tuple_arity": 0,
+        "sample": "seen_ids: set[str] = set()"
+      },
+      {
+        "line": 8311,
+        "name": "seen_edges",
+        "tuple_arity": 4,
+        "sample": "seen_edges: set[tuple[str, str, str, str | None]] = set()"
+      }
+    ],
+    "error": ""
+  },
+  "examples": [
+    {
+      "source": "extension_background",
+      "target": "extension_background_setstate",
+      "edge_count": 2,
+      "relations": [
+        "calls",
+        "contains"
+      ],
+      "source_files": [
+        "extension/background.js"
+      ],
+      "source_locations": [
+        "L10",
+        "L127"
+      ],
+      "contexts": [
+        "",
+        "call"
+      ]
+    },
+    {
+      "source": "extension_background",
+      "target": "extension_background_pickelement",
+      "edge_count": 2,
+      "relations": [
+        "calls",
+        "contains"
+      ],
+      "source_files": [
+        "extension/background.js"
+      ],
+      "source_locations": [
+        "L124",
+        "L29"
+      ],
+      "contexts": [
+        "",
+        "call"
+      ]
+    },
+    {
+      "source": "extension_background",
+      "target": "extension_background_run",
+      "edge_count": 2,
+      "relations": [
+        "calls",
+        "contains"
+      ],
+      "source_files": [
+        "extension/background.js"
+      ],
+      "source_locations": [
+        "L118",
+        "L39"
+      ],
+      "contexts": [
+        "",
+        "call"
+      ]
+    },
+    {
+      "source": "extension_background",
+      "target": "extension_background_saverule",
+      "edge_count": 2,
+      "relations": [
+        "calls",
+        "contains"
+      ],
+      "source_files": [
+        "extension/background.js"
+      ],
+      "source_locations": [
+        "L121",
+        "L86"
+      ],
+      "contexts": [
+        "",
+        "call"
+      ]
+    },
+    {
+      "source": "extension_background",
+      "target": "extension_background_undo",
+      "edge_count": 2,
+      "relations": [
+        "calls",
+        "contains"
+      ],
+      "source_files": [
+        "extension/background.js"
+      ],
+      "source_locations": [
+        "L130",
+        "L143"
+      ],
+      "contexts": [
+        "",
+        "call"
+      ]
+    }
+  ]
+}

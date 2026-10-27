@@ -1,10 +1,106 @@
-var DEFAULT_SERVER = "https://project--9e9f7a85-4d83-4522-9e31-420744d88dd9.lovable.app";
+var DEFAULT_SERVER = globalThis.PagewrightConfig.serverUrl;
 var $ = function (id) { return document.getElementById(id); };
 var tab = null;
 var activeKey = null;
 var refreshVersion = 0;
 var drafts = {};
 var currentState = null;
+var aiReady = false;
+var savedAI = null;
+var aiAccount = null;
+var configuredProviders = [];
+var aiSettingsVersion = 0;
+var AI_MODELS = {
+  openrouter: [
+    { id: "anthropic/claude-opus-5.5", label: "Claude Opus 5.5" },
+    { id: "anthropic/claude-sonnet-5.5", label: "Claude Sonnet 5.5" },
+    { id: "anthropic/claude-haiku-5.5", label: "Claude Haiku 5.5" },
+    { id: "openai/gpt-4.1-mini", label: "GPT-4.1 mini" },
+    { id: "openai/gpt-4.1", label: "GPT-4.1" }
+  ],
+  anthropic: [
+    { id: "claude-opus-5-5", label: "Claude Opus 5.5" },
+    { id: "claude-sonnet-5-5", label: "Claude Sonnet 5.5" },
+    { id: "claude-haiku-5-5", label: "Claude Haiku 5.5" }
+  ],
+  openai: [
+    { id: "gpt-4.1-mini", label: "GPT-4.1 mini" },
+    { id: "gpt-4.1", label: "GPT-4.1" },
+    { id: "gpt-4o-mini", label: "GPT-4o mini" }
+  ]
+};
+
+function modelOptions(provider, selected) {
+  var models = (AI_MODELS[provider] || []).slice();
+  if (selected && savedAI && savedAI.provider === provider && !models.some(function (m) { return m.id === selected; })) {
+    models.push({ id: selected, label: "Previously saved: " + selected });
+  }
+  var select = $("aiModel");
+  select.replaceChildren();
+  if (!models.length) {
+    var placeholder = document.createElement("option");
+    placeholder.value = ""; placeholder.textContent = "Choose a provider first";
+    select.appendChild(placeholder);
+  }
+  models.forEach(function (model) {
+    var option = document.createElement("option");
+    option.value = model.id; option.textContent = model.label;
+    select.appendChild(option);
+  });
+  select.disabled = !models.length;
+  select.value = models.some(function (m) { return m.id === selected; }) ? selected : models.length ? models[0].id : "";
+  var hasKey = configuredProviders.includes(provider);
+  $("apiKey").required = !hasKey;
+  $("apiKey").placeholder = hasKey ? "Saved encrypted — leave blank to keep" : "Paste your provider API key";
+  $("apiKey").disabled = !aiAccount;
+  $("removeKey").hidden = !hasKey;
+}
+
+function applyAISettings(state) {
+  savedAI = state && state.settings || null;
+  aiAccount = state && state.user || null;
+  configuredProviders = (state && state.credentials || []).map(function (c) { return c.provider; });
+  aiReady = !!(aiAccount && savedAI && savedAI.userId === aiAccount.id && AI_MODELS[savedAI.provider] && configuredProviders.includes(savedAI.provider) && savedAI.model);
+  $("settingsTitle").textContent = !aiAccount ? "Sign in to get started" : aiReady ? "AI settings" : "Bring your own AI";
+  $("settingsIntro").textContent = aiAccount
+    ? "Choose a provider and add your API key. AI usage is billed to your own provider account."
+    : "First sign in or create an account. Then choose your AI provider and save your API key securely to your account.";
+  $("accountStatus").textContent = aiAccount
+    ? "Signed in as @" + aiAccount.username + (configuredProviders.length ? ". Encrypted API keys saved: " + configuredProviders.length + "." : ". No API key has been saved to this account yet.")
+    : "Sign in to save your API key securely on your account.";
+  $("signInForAI").hidden = !!aiAccount;
+  $("settingsForm").hidden = !aiAccount;
+  $("saveSettings").disabled = !aiAccount;
+  $("apiKey").disabled = !aiAccount;
+  if (!aiReady) $("settings").hidden = false;
+  render(currentState);
+}
+
+async function loadAISettings() {
+  var version = ++aiSettingsVersion;
+  var response = await chrome.runtime.sendMessage({ type: "getAISettings" });
+  if (version !== aiSettingsVersion) return;
+  if (!response || response.error) {
+    applyAISettings(null);
+    $("settingsMsg").textContent = response && response.error || "Couldn't load encrypted key settings.";
+    return;
+  }
+  applyAISettings(response);
+}
+
+function fillAISettings() {
+  $("aiProvider").value = savedAI && savedAI.provider || "";
+  $("apiKey").value = "";
+  modelOptions($("aiProvider").value, savedAI && savedAI.model);
+}
+
+function openAISettings() {
+  fillAISettings();
+  if (currentState && currentState.requiresSetup) $("settingsMsg").textContent = currentState.error || "Update your API key to continue.";
+  $("settings").hidden = false;
+  render(currentState);
+  (aiAccount ? $("aiProvider") : $("signInForAI")).focus();
+}
 
 var STATUS_TEXT = {
   reading: "Reading the page…",
@@ -21,7 +117,8 @@ function render(state) {
   $("instruction").placeholder = t ? "e.g. make this bigger · move this to the bottom · hide these" : "What would you like to change?";
   var busy = state && STATUS_TEXT[state.status];
   var done = state && state.status === "done";
-  $("run").disabled = !!busy || !tab;
+  $("editor").hidden = !aiReady || !$("settings").hidden;
+  $("run").disabled = !!busy || !tab || !aiReady;
   $("pick").disabled = !!busy || !!(state && state.picking) || !tab;
   $("undo").hidden = !done;
   $("status").hidden = !busy;
@@ -96,6 +193,7 @@ function renderSaved(rules) {
 }
 
 function run() {
+  if (!aiReady) { openAISettings(); return; }
   var instruction = $("instruction").value.trim();
   if (!instruction || !tab || $("run").disabled) return;
   render(Object.assign({}, currentState, { status: "reading" }));
@@ -117,19 +215,28 @@ async function refreshTab() {
   try { $("host").textContent = new URL(tab.url).hostname || "this page"; } catch (e) { $("host").textContent = "this page"; }
   if (changed) { render(null); $("instruction").value = drafts[tab.id] || ""; }
   var session = await chrome.storage.session.get(activeKey);
-  var local = await chrome.storage.local.get(["rules", "serverUrl"]);
+  var local = await chrome.storage.local.get("rules");
   if (version !== refreshVersion) return;
   var last = session[activeKey];
   if (changed && !Object.prototype.hasOwnProperty.call(drafts, tab.id) && last && last.instruction) $("instruction").value = last.instruction;
   render(last || null);
   renderSaved(local.rules);
-  if (document.activeElement !== $("serverUrl")) $("serverUrl").value = local.serverUrl || DEFAULT_SERVER;
+
 }
 
 async function init() {
   chrome.storage.onChanged.addListener(function (changes, area) {
-    if (area === "session" && activeKey && changes[activeKey]) render(changes[activeKey].newValue);
+    if (area === "session" && activeKey && changes[activeKey]) {
+      render(changes[activeKey].newValue);
+      if (changes[activeKey].newValue && changes[activeKey].newValue.requiresSetup) openAISettings();
+    }
     if (area === "local" && changes.rules) renderSaved(changes.rules.newValue);
+    if (area === "local" && (changes.aiSettings || changes.account)) {
+      var oldUser = aiAccount && aiAccount.id;
+      loadAISettings().then(function () {
+        if (oldUser !== (aiAccount && aiAccount.id) || !$("settings").hidden && !$("apiKey").value) fillAISettings();
+      }).catch(function () { $("settingsMsg").textContent = "Couldn't load encrypted key settings."; });
+    }
   });
   $("run").addEventListener("click", run);
   $("hubBtn").addEventListener("click", function () {
@@ -157,20 +264,59 @@ async function init() {
     chrome.runtime.sendMessage({ type: "undo", tabId: tab.id });
   });
   $("settingsBtn").addEventListener("click", function () {
-    $("settings").hidden = !$("settings").hidden;
+    if ($("settings").hidden) openAISettings();
+    else if (aiReady) { $("settings").hidden = true; render(currentState); }
   });
-  $("saveSettings").addEventListener("click", function () {
-    var v = $("serverUrl").value.trim().replace(/\/+$/, "");
-    chrome.storage.local.set({ serverUrl: v || DEFAULT_SERVER }).then(function () {
-      $("settingsMsg").textContent = "Saved";
-      setTimeout(function () { $("settingsMsg").textContent = ""; }, 1500);
-    });
+  $("aiProvider").addEventListener("change", function () {
+    $("apiKey").value = "";
+    modelOptions($("aiProvider").value, savedAI && savedAI.provider === $("aiProvider").value ? savedAI.model : null);
   });
+  $("signInForAI").addEventListener("click", function () {
+    chrome.tabs.create({ url: chrome.runtime.getURL("hub.html?auth=1") });
+  });
+  $("settingsForm").addEventListener("submit", async function (event) {
+    event.preventDefault();
+    if (!aiAccount) { $("settingsMsg").textContent = "Sign in before saving your encrypted API key."; return; }
+    var provider = $("aiProvider").value;
+    var model = $("aiModel").value;
+    if (!AI_MODELS[provider] || !model) { $("settingsMsg").textContent = "Choose a provider and model."; return; }
+    $("saveSettings").disabled = true;
+    try {
+      var response = await chrome.runtime.sendMessage({
+        type: "saveAISettings", provider: provider, model: model,
+        apiKey: $("apiKey").value.trim()
+      });
+      if (!response || response.error) throw new Error(response && response.error || "Couldn't save encrypted API key.");
+      $("apiKey").value = "";
+      await loadAISettings();
+      fillAISettings();
+      $("settingsMsg").textContent = "Saved encrypted to your account.";
+      $("settings").hidden = aiReady;
+      render(currentState);
+      if (aiReady) $("instruction").focus();
+    } catch (error) { $("settingsMsg").textContent = error.message || "Couldn't save your key."; }
+    finally { $("saveSettings").disabled = !aiAccount; }
+  });
+  $("removeKey").addEventListener("click", async function () {
+    try {
+      var response = await chrome.runtime.sendMessage({ type: "removeAIKey", provider: $("aiProvider").value });
+      if (!response || response.error) throw new Error(response && response.error || "Couldn't remove key.");
+      await loadAISettings();
+      openAISettings();
+      $("settingsMsg").textContent = "Key removed from your account.";
+    } catch (error) { $("settingsMsg").textContent = error.message; }
+  });
+  $("serverStatus").textContent = "Server: " + DEFAULT_SERVER;
+  await loadAISettings();
+  fillAISettings();
   await refreshTab();
-  $("instruction").focus();
+  (aiReady ? $("instruction") : aiAccount ? $("aiProvider") : $("signInForAI")).focus();
 }
 
-init();
+var initialized = init().catch(function () {
+  applyAISettings(null);
+  $("settingsMsg").textContent = "Couldn't load settings. Close and reopen Pagewright to try again.";
+});
 
 // Side panel stays open across tabs: refresh when the active tab or its page changes.
 chrome.tabs.onActivated.addListener(function () { refreshTab(); });

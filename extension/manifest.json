@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Pagewright",
-  "version": "1.1.0",
+  "version": "1.3.1",
   "description": "Ask any web page to rearrange itself. Sort, filter, hide or restyle \u2014 changes stay in your browser.",
   "permissions": [
     "activeTab",

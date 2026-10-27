@@ -1,16 +1,36 @@
-import { z } from "zod";
+import { z } from "zod/v4";
+import { userFromRequest } from "./auth.server";
+import { getUserCredential, VaultError } from "./credential-vault.server";
+import { CORS_HEADERS } from "./public-http.server";
+export { CORS_HEADERS } from "./public-http.server";
 
-const OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions";
-const MODEL = "anthropic/claude-opus-5.5";
-
-export const CORS_HEADERS = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type, Accept, Authorization, X-Lovable-AIG-Run-ID",
-  "Access-Control-Max-Age": "86400",
+const PROVIDERS = {
+  openrouter: {
+    name: "OpenRouter",
+    url: "https://openrouter.ai/api/v1/chat/completions",
+    model: "anthropic/claude-opus-5.5",
+  },
+  openai: {
+    name: "OpenAI",
+    url: "https://api.openai.com/v1/chat/completions",
+    model: "gpt-4.1-mini",
+  },
+  anthropic: {
+    name: "Anthropic",
+    url: "https://api.anthropic.com/v1/messages",
+    model: "claude-opus-5-5",
+  },
 } as const;
 
 const RequestSchema = z.object({
+  provider: z.enum(["openrouter", "openai", "anthropic"]),
+  model: z
+    .string()
+    .trim()
+    .min(1)
+    .max(120)
+    .regex(/^[a-zA-Z0-9._:/-]+$/)
+    .optional(),
   instruction: z.string().trim().min(1).max(2000),
   url: z.string().max(2000),
   title: z.string().max(500).default(""),
@@ -90,8 +110,12 @@ Rules:
 function json(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
     status,
-    headers: { "Content-Type": "application/json", ...CORS_HEADERS },
+    headers: { "Content-Type": "application/json", "Cache-Control": "no-store", ...CORS_HEADERS },
   });
+}
+
+export function reshapeCapabilities(): Response {
+  return json({ authentication: "account-key", providers: Object.keys(PROVIDERS), version: 2 });
 }
 
 export async function handleReshape(request: Request): Promise<Response> {
@@ -104,11 +128,29 @@ export async function handleReshape(request: Request): Promise<Response> {
     return json({ error: "Invalid JSON body." }, 400);
   }
 
-  const apiKey = process.env["OPENROUTER_API_KEY"];
-  if (!apiKey) return json({ error: "OpenRouter is not connected yet. Add your OpenRouter API key to enable page editing." }, 503);
+  // Resolve the verified account; plaintext provider keys never return to clients.
+  let apiKey: string;
+  try {
+    const user = await userFromRequest(request);
+    if (!user)
+      return json(
+        { error: "Sign in to use your saved API key.", requiresSignIn: true, requiresSetup: true },
+        401,
+      );
+    apiKey = await getUserCredential(user.id, input.provider);
+  } catch (error) {
+    return json(
+      {
+        error: error instanceof VaultError ? error.message : "Couldn't access your saved API key.",
+        requiresSetup: true,
+      },
+      error instanceof VaultError ? error.status : 503,
+    );
+  }
+  const provider = PROVIDERS[input.provider];
 
   const body = {
-    model: MODEL,
+    model: input.model ?? provider.model,
     messages: [
       { role: "system", content: INSTRUCTIONS },
       {
@@ -129,41 +171,77 @@ export async function handleReshape(request: Request): Promise<Response> {
         schema: z.toJSONSchema(PlanSchema),
       },
     },
-    provider: { require_parameters: true },
     max_tokens: 8000,
   };
 
-  try {
-    const response = await fetch(OPENROUTER_URL, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        "Content-Type": "application/json",
-        "X-OpenRouter-Title": "Pagewright",
+  const headers: Record<string, string> = { "Content-Type": "application/json" };
+  let upstreamBody: unknown;
+  if (input.provider === "anthropic") {
+    headers["x-api-key"] = apiKey;
+    headers["anthropic-version"] = "2023-06-01";
+    upstreamBody = {
+      model: body.model,
+      system: INSTRUCTIONS,
+      messages: [body.messages[1]],
+      max_tokens: body.max_tokens,
+      output_config: {
+        format: { type: "json_schema", schema: body.response_format.json_schema.schema },
       },
-      body: JSON.stringify(body),
+    };
+  } else {
+    headers["Authorization"] = `Bearer ${apiKey}`;
+    upstreamBody =
+      input.provider === "openrouter" ? { ...body, provider: { require_parameters: true } } : body;
+    if (input.provider === "openrouter") headers["X-OpenRouter-Title"] = "Pagewright";
+  }
+
+  try {
+    const response = await fetch(provider.url, {
+      method: "POST",
+      headers,
+      body: JSON.stringify(upstreamBody),
       signal: request.signal,
+      redirect: "error",
     });
     if (!response.ok) {
       // Do not echo upstream bodies: they can contain submitted page content.
-      console.error("OpenRouter request failed", response.status);
-      const message = response.status === 402
-        ? "Your OpenRouter balance is empty. Add credits to your OpenRouter account."
-        : response.status === 401
-          ? "Your OpenRouter API key is invalid. Update it to continue."
-          : response.status === 429
-            ? "OpenRouter is busy. Wait a moment and try again."
-            : "OpenRouter could not complete the request. Try again.";
-      return json({ error: message }, [401, 402, 403, 429].includes(response.status) ? response.status : 502);
+      console.error("AI provider request failed", input.provider, response.status);
+      const message =
+        response.status === 402
+          ? `Your ${provider.name} balance is empty. Add credits to your account.`
+          : response.status === 401
+            ? `Your ${provider.name} API key is invalid. Update it in Settings to continue.`
+            : response.status === 429
+              ? `${provider.name} is busy or your usage limit was reached. Check your account or try again later.`
+              : `${provider.name} could not complete the request. Check your model and account access in Settings.`;
+      return json(
+        { error: message, requiresSetup: response.status === 401 },
+        [401, 402, 403, 429].includes(response.status) ? response.status : 502,
+      );
     }
-    const result = await response.json() as { choices?: { message?: { content?: string } }[] };
+    const result = (await response.json()) as {
+      choices?: { message?: { content?: string; refusal?: string }; finish_reason?: string }[];
+      content?: { type: string; text?: string }[];
+      stop_reason?: string;
+    };
     try {
-      return json(PlanSchema.parse(JSON.parse(result.choices?.[0]?.message?.content ?? "")));
+      const text =
+        input.provider === "anthropic"
+          ? result.stop_reason === "end_turn" &&
+            result.content
+              ?.filter((block) => block.type === "text")
+              .map((block) => block.text ?? "")
+              .join("")
+          : result.choices?.[0]?.finish_reason !== "length" &&
+            !result.choices?.[0]?.message?.refusal &&
+            result.choices?.[0]?.message?.content;
+      if (!text) throw new Error("Missing or incomplete plan");
+      return json(PlanSchema.parse(JSON.parse(text)));
     } catch {
       return json({ error: "The AI returned an unreadable plan. Try rephrasing." }, 502);
     }
   } catch {
-    console.error("OpenRouter request could not complete");
+    console.error("AI provider request could not complete", input.provider);
     return json({ error: "The AI request failed. Try again." }, 502);
   }
 }

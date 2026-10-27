@@ -1,5 +1,5 @@
 /* Pagewright community: browse, try and share setups in a full-screen tab. */
-var DEFAULT_SERVER = "https://project--9e9f7a85-4d83-4522-9e31-420744d88dd9.lovable.app";
+var DEFAULT_SERVER = globalThis.PagewrightConfig.serverUrl;
 var $ = function (id) { return document.getElementById(id); };
 var params = new URLSearchParams(location.search);
 var server = DEFAULT_SERVER;
@@ -277,15 +277,9 @@ async function saveSession(d) {
 
 // Returns a valid access token, refreshing it when it is about to expire.
 async function accessToken() {
-  var acc = await getAccount();
-  if (!acc) return null;
-  if (acc.expiresAt && acc.expiresAt * 1000 - Date.now() > 60000) return acc.accessToken;
-  var res = await fetch(server + "/api/public/auth/refresh", {
-    method: "POST", headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ refreshToken: acc.refreshToken }),
-  });
-  if (!res.ok) { await chrome.storage.local.remove("account"); renderAccount(); return null; }
-  return (await saveSession(await res.json())).accessToken;
+  var result = await chrome.runtime.sendMessage({ type: "accountToken" });
+  if (!result || !result.token) { renderAccount(); return null; }
+  return result.token;
 }
 
 async function renderAccount() {
@@ -370,8 +364,8 @@ document.querySelectorAll(".seg button").forEach(function (b) {
 });
 
 (async function init() {
-  var s = await chrome.storage.local.get("serverUrl");
-  server = (s.serverUrl || DEFAULT_SERVER).replace(/\/+$/, "");
+  server = DEFAULT_SERVER;
+  if (params.get("auth") === "1") openAuth(false);
   renderAccount();
   setView((await chrome.storage.local.get("hubView")).hubView || "grid");
   var host = params.get("host");

@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import { CORS_HEADERS } from "./reshape.server";
+import { CORS_HEADERS } from "./public-http.server";
 
 const OperationSchema = z
   .object({
@@ -30,7 +30,10 @@ function json(body: unknown, status = 200) {
 }
 
 export function normalizeHost(host: string) {
-  return host.trim().toLowerCase().replace(/^www\./, "");
+  return host
+    .trim()
+    .toLowerCase()
+    .replace(/^www\./, "");
 }
 
 async function admin() {
@@ -54,7 +57,9 @@ export async function listConfigs(request: Request) {
   const db = await admin();
   let query = db
     .from("shared_configs")
-    .select("id, host, title, description, author_name, instruction, operations, installs, likes, created_at");
+    .select(
+      "id, host, title, description, author_name, instruction, operations, installs, likes, created_at",
+    );
   for (const col of sort) query = query.order(col, { ascending: col === "title" });
   query = query.limit(limit);
   if (host) {
@@ -62,8 +67,12 @@ export async function listConfigs(request: Request) {
     query = query.or(`host.eq.*,host.ilike.%${h.replace(/[%_,()*]/g, "")}%`);
   }
   if (q) {
-    const safe = q.replace(/[%_,()*]/g, " ");
-    query = query.or(`title.ilike.%${safe}%,description.ilike.%${safe}%,host.ilike.%${safe}%,author_name.ilike.%${safe}%`);
+    // Usernames allow underscores: escape LIKE's wildcard instead of replacing
+    // it with a space, so a shared setup can be found by its actual author.
+    const safe = q.replace(/[%,()*]/g, " ").replace(/_/g, "\\_");
+    query = query.or(
+      `title.ilike.%${safe}%,description.ilike.%${safe}%,host.ilike.%${safe}%,author_name.ilike.%${safe}%`,
+    );
   }
   const { data, error } = await query;
   if (error) return json({ error: "Couldn't load shared setups." }, 500);
@@ -77,7 +86,10 @@ export async function listConfigs(request: Request) {
       .from("config_likes")
       .select("config_id")
       .eq("user_id", user.id)
-      .in("config_id", data.map((d) => d.id));
+      .in(
+        "config_id",
+        data.map((d) => d.id),
+      );
     liked = new Set((rows ?? []).map((r) => r.config_id));
   }
   return json({ configs: data.map((d) => ({ ...d, liked: liked.has(d.id) })) });

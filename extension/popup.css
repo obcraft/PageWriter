@@ -50,6 +50,12 @@ button:disabled { cursor: default; opacity: .55; }
 .icon-btn:hover { color: var(--ink); background: var(--paper-2); }
 main, .settings, .saved { padding: 20px 16px; }
 .settings { border-bottom: 1px solid var(--line); background: var(--paper-2); }
+.settings h1 { font-size: 17px; margin: 0 0 8px; }
+.settings .label { margin-top: 16px; }
+.settings p { margin: 8px 0; }
+.settings details { margin-top: 16px; }
+.settings summary { cursor: pointer; }
+.settings select { width: 100%; padding: 9px 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); }
 .label { display: block; margin-bottom: 8px; font-size: 12px; font-weight: 600; color: var(--ink-2); }
 textarea, input { width: 100%; min-width: 0; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); color: var(--ink); font: 14px/1.5 var(--sans); padding: 11px 12px; resize: vertical; }
 textarea { min-height: 112px; max-height: 280px; }

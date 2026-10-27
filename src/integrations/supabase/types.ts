@@ -70,10 +70,10 @@ export type Database = {
           likes: number
           operations: Json
           title: string
-          user_id: string | null
+          user_id: string
         }
         Insert: {
-          author_name?: string
+          author_name: string
           created_at?: string
           description?: string
           host: string
@@ -83,7 +83,7 @@ export type Database = {
           likes?: number
           operations: Json
           title: string
-          user_id?: string | null
+          user_id: string
         }
         Update: {
           author_name?: string
@@ -96,7 +96,37 @@ export type Database = {
           likes?: number
           operations?: Json
           title?: string
-          user_id?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_api_credentials: {
+        Row: {
+          ciphertext: string
+          created_at: string
+          encryption_version: number
+          nonce: string
+          provider: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          ciphertext: string
+          created_at?: string
+          encryption_version?: number
+          nonce: string
+          provider: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          ciphertext?: string
+          created_at?: string
+          encryption_version?: number
+          nonce?: string
+          provider?: string
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }

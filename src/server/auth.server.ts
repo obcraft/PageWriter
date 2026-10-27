@@ -2,7 +2,7 @@ import { createClient } from "@supabase/supabase-js";
 import { z } from "zod";
 
 import type { Database } from "@/integrations/supabase/types";
-import { CORS_HEADERS } from "./reshape.server";
+import { CORS_HEADERS } from "./public-http.server";
 
 // Account endpoints for the browser extension (it has no bundler, so it talks to these instead of the SDK).
 
@@ -11,7 +11,7 @@ export const USERNAME_RE = /^[a-z0-9_]{3,20}$/;
 function json(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
     status,
-    headers: { "Content-Type": "application/json", ...CORS_HEADERS },
+    headers: { "Content-Type": "application/json", "Cache-Control": "no-store", ...CORS_HEADERS },
   });
 }
 
@@ -33,7 +33,10 @@ async function usernameFor(userId: string) {
   return data?.username ?? null;
 }
 
-function sessionBody(session: { access_token: string; refresh_token: string; expires_at?: number }, username: string | null) {
+function sessionBody(
+  session: { access_token: string; refresh_token: string; expires_at?: number },
+  username: string | null,
+) {
   return {
     accessToken: session.access_token,
     refreshToken: session.refresh_token,
@@ -64,11 +67,18 @@ async function body(request: Request) {
 export async function signup(request: Request) {
   const parsed = SignupSchema.safeParse(await body(request));
   if (!parsed.success) {
-    return json({ error: "Username: 3–20 lowercase letters, numbers or _. Password: at least 8 characters." }, 400);
+    return json(
+      { error: "Username: 3–20 lowercase letters, numbers or _. Password: at least 8 characters." },
+      400,
+    );
   }
   const { email, password, username } = parsed.data;
   const db = await admin();
-  const { data: taken } = await db.from("profiles").select("id").eq("username", username).maybeSingle();
+  const { data: taken } = await db
+    .from("profiles")
+    .select("id")
+    .eq("username", username)
+    .maybeSingle();
   if (taken) return json({ error: "That username is taken." }, 409);
 
   const { data, error } = await publicClient().auth.signUp({
@@ -92,7 +102,9 @@ export async function login(request: Request) {
 export async function refresh(request: Request) {
   const b = (await body(request)) as { refreshToken?: unknown } | null;
   if (!b || typeof b.refreshToken !== "string") return json({ error: "Missing token." }, 400);
-  const { data, error } = await publicClient().auth.refreshSession({ refresh_token: b.refreshToken });
+  const { data, error } = await publicClient().auth.refreshSession({
+    refresh_token: b.refreshToken,
+  });
   if (error || !data.session || !data.user) return json({ error: "Please sign in again." }, 401);
   return json(sessionBody(data.session, await usernameFor(data.user.id)));
 }

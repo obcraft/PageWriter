@@ -1,0 +1,15 @@
+{
+  "runs": [
+    {
+      "date": "2026-10-26T20:48:50.705274+00:00",
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "files": 113,
+      "token_usage_status": "unavailable"
+    }
+  ],
+  "total_input_tokens": 0,
+  "total_output_tokens": 0,
+  "token_usage_status": "unavailable",
+  "token_usage_note": "Semantic extraction ran in host agents; measured input/output counts were not exposed. Zero fields are placeholders, not measured usage or zero cost."
+}

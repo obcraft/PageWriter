@@ -1,1 +1,7 @@
-project_id = "szywawltcrwyvplasadx"
+project_id = "qcjovvehgbomcyglbovu"
+
+[auth]
+site_url = "https://pagewright-backend.fly.dev"
+
+[auth.email]
+enable_confirmations = true

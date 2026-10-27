@@ -1,0 +1,14 @@
+.git
+.env*
+node_modules
+.output
+.tanstack
+.wrangler
+.nitro
+.vinxi
+graphify-out
+.agents
+.codex
+.aws
+.DS_Store
+*.log
